@@ -2,6 +2,7 @@ import jaxtyping
 from jaxtyping import Float, jaxtyped
 from typing import Optional, Tuple, Union, List
 from typeguard import typechecked
+from beartype import beartype
 
 from matching_index import matching_index
 from optimisation_criteria import DistanceWeightedCommunicability
@@ -11,7 +12,8 @@ import torch.optim as optim
 
 
 class GenerativeNetworkModel():
-    @jaxtyped(typechecker=typechecked)
+    @jaxtyped
+    @beartype
     def __init__(self,
                  # The first set of arguments are for both the binary and weighted GMN. 
                  seed_adjacency_matrix: Float[torch.Tensor, "num_nodes num_nodes"],
@@ -163,8 +165,9 @@ class GenerativeNetworkModel():
             self.optimiser = optim.SGD([self.weight_matrix], lr=self.alpha, maximize=maximise)
 
 
-    @jaxtyped(typechecker=typechecked)
-    def binary_update(self, heterochronous_matrix: Optional[Float[torch.Tensor, "{self.num_nodes} {self.num_nodes}"]] = None) -> Tuple[Tuple[int, int], Float[torch.Tensor, "num_nodes num_nodes"]]:
+    @jaxtyped
+    @beartype
+    def binary_update(self, heterochronous_matrix: Optional[Float[torch.Tensor, "..."]] = None) -> Tuple[Tuple[int, int], Float[torch.Tensor, "num_nodes num_nodes"]]:
         """
         Performs one update step of the adjacency matrix for the binary GMN.
 
@@ -212,8 +215,9 @@ class GenerativeNetworkModel():
         # Return the added edge and (a copy of) the updated adjacency matrix
         return added_edges, self.adjacency_matrix.clone()
     
-    @jaxtyped(typechecker=typechecked)
-    def weighted_update(self) -> Float[torch.Tensor, "{self.num_nodes} {self.num_nodes}"]:
+    @jaxtyped
+    @beartype
+    def weighted_update(self) -> Float[torch.Tensor, "..."]:
         """
         Performs one update step of the weight matrix for the weighted GMN.
 
@@ -240,17 +244,18 @@ class GenerativeNetworkModel():
         # Return the updated weight matrix
         return self.weight_matrix.detach().clone().cpu()
     
-    @jaxtyped(typechecker=typechecked)
+    @jaxtyped
+    @beartype
     def train_loop( 
         self,
         num_iterations: int,
         binary_updates_per_iteration: int = 1,
         weighted_updates_per_iteration: int = 1,
-        heterochronous_matrix: Optional[Float[torch.Tensor, "{self.num_nodes} {self.num_nodes} {num_iterations*binary_updates_per_iteration}"]] = None
+        heterochronous_matrix: Optional[Float[torch.Tensor, "..."]] = None
     ) -> Tuple[  
         List[Tuple[int, int]],
-        Float[torch.Tensor, "{self.num_nodes} {self.num_nodes} {num_iterations*binary_updates_per_iteration}"],
-        Optional[Float[torch.Tensor, "{self.num_nodes} {self.num_nodes} {num_iterations*weighted_updates_per_iteration}"]]
+        Float[torch.Tensor, "..."],
+        Optional[Float[torch.Tensor, "..."]]
         ]:
         """
         Trains the network for a specified number of iterations.

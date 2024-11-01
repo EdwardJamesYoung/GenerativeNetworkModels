@@ -3,6 +3,7 @@ import torch
 from typing import Tuple, List
 from jaxtyping import Float, Int, jaxtyped
 from typeguard import typechecked
+from beartype import beartype
 
 from abc import ABC, abstractmethod
 
@@ -11,7 +12,8 @@ class OptimisationCriteria(ABC):
         self.normalisation = normalisation
 
     @abstractmethod
-    @jaxtyped(typechecker=typechecked)
+    @jaxtyped
+    @beartype
     def _unnormalised_call(self, weight_matrix:Float[torch.Tensor, "num_nodes num_nodes"]) -> Float[torch.Tensor, "num_nodes num_nodes"]:
         """
         Computes the unnormalised value of the optimisation criteria for a given weight matrix.
@@ -24,7 +26,8 @@ class OptimisationCriteria(ABC):
         """
         pass
 
-    @jaxtyped(typechecker=typechecked)
+    @jaxtyped
+    @beartype
     def __call__(self, weight_matrix:Float[torch.Tensor, "num_nodes num_nodes"]) -> Float[torch.Tensor, ""]:
         
         symmetrised_matrix = 0.5*(weight_matrix + weight_matrix.T)

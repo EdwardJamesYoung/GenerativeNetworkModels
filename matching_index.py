@@ -3,8 +3,10 @@ import torch
 from typing import Tuple, List
 from jaxtyping import Float, Int, jaxtyped
 from typeguard import typechecked
+from beartype import beartype
 
-@jaxtyped(typechecker=typechecked)
+@jaxtyped
+@beartype
 def matching_index(
     adjacency_matrix:Float[torch.Tensor, "num_nodes num_nodes"],
     mode:str = "in",
