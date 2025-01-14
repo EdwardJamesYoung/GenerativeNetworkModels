@@ -25,6 +25,7 @@ from scipy.spatial.distance import squareform, pdist
 import seaborn as sns
 #import netneurotools as nt
 from nilearn import plotting
+from netneurotools.networks import networks_utils
 
 
 # Load the provided .mat file to explore its contents
@@ -52,7 +53,7 @@ fc_modules = consensus_mat["LauConsensus"]["Matrices"][res_parcellation][4][:, 2
 
 euclidean_distances = squareform(pdist(coordinates))
 
-thresh_conn = threshold_network(connectivity, 10)
+thresh_conn = networks_utils.threshold_network(connectivity, 10)
 
 # Plot final adjacency and weight matrices
 plt.figure(figsize=(5, 5))

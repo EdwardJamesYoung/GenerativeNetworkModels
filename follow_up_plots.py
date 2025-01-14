@@ -7,6 +7,7 @@ Created on Sun Dec  1 18:54:23 2024
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def pareto_frontier(data, objectives):
@@ -74,25 +75,47 @@ def rank_pareto_solutions(pareto_df, objectives, objective_weights):
 
 
 
-results_df= pd.read_csv(r'../Code/results_simple_local.csv')
+results_df= pd.read_csv(r'../Data/results_simple_local.csv')
+
+results_df = np.round(results_df,2)
+results_df2= pd.read_csv(r'../Code/results_cumulative_local.csv')
+results_df2 = np.round(results_df2,2)
+
+# average across runs
+results_df = results_df.groupby(["z_value", "y_value", "eta", "gamma", "lambdah"]).mean().reset_index()
+results_df2 = results_df2.groupby(["z_value", "y_value", "eta", "gamma", "lambdah"]).mean().reset_index()
+#results_df2 = results_df.groupby(["z_value", "y_value", "eta", "gamma", "lambdah"]).std().reset_index()
+
+#results_df["sd_topography"] = results_df2["topography_energy"]
+#results_df["sd_topology"] = results_df2["topology_energy"]
+#results_df["sd_total"] = results_df2["total_energy"]
+
+results_df["Type"] = "Simple"
+results_df["Connections"] = "Local"
+
+results_df2["Type"] = "Cumulative"
+results_df2["Connections"] = "Local"
+
+#results_df = pd.concat([results_df, results_df2])
 
 # all models are wrong but some are better than other.
 # i.e., what are you trying to capture?
 beta = 0.5
 results_df["total_energy"] = beta * results_df["topology_energy"] + (1 - beta) * results_df["topography_energy"]
+results_df2["total_energy"] = beta * results_df2["topology_energy"] + (1 - beta) * results_df2["topography_energy"]
 
-sns.regplot(results_df, x = 'topology_energy', y = 'topography_energy', scatter=True)
+sns.regplot(results_df, x = 'topology_energy', y = 'topography_energy', scatter=False)
 plt.show()
 
 # Simulate example data
-pareto_data = results_df#.copy()
+pareto_data = results_df.copy()
 
 # Normalize the energies
-pareto_data['topology_energy'] = (pareto_data['topology_energy'] - pareto_data['topology_energy'].min()) / \
-                                      (pareto_data['topology_energy'].max() - pareto_data['topology_energy'].min())
+#pareto_data['topology_energy'] = (pareto_data['topology_energy'] - pareto_data['topology_energy'].min()) / \
+#                                      (pareto_data['topology_energy'].max() - pareto_data['topology_energy'].min())
 
-pareto_data['topography_energy'] = (pareto_data['topography_energy'] - pareto_data['topography_energy'].min()) / \
-                                        (pareto_data['topography_energy'].max() - pareto_data['topography_energy'].min())
+#pareto_data['topography_energy'] = (pareto_data['topography_energy'] - pareto_data['topography_energy'].min()) / \
+#                                        (pareto_data['topography_energy'].max() - pareto_data['topography_energy'].min())
 
 
 # Identify the Pareto front for topology and topography energies
@@ -108,11 +131,6 @@ plt.ylabel('Topography Energy')
 plt.legend()
 plt.grid()
 plt.show()
-
-
-
-pareto_front = pareto_front.drop(columns=["x_value","alpha"])
-
 
 # Determine the number of rows and columns for the subplot grid
 num_vars = len(pareto_front.columns)
@@ -138,39 +156,50 @@ for j in range(i+1, len(axes)):
 plt.tight_layout()
 plt.show()
 
+pareto_front2 = pareto_frontier(results_df2, ['topology_energy', 'topography_energy'])
+
+pareto_front = pd.concat([pareto_front, pareto_front2])
+
+pareto_front = pareto_front.drop(columns=["x_value","alpha"])
+
+results_df0 = pd.concat([results_df, results_df2])
+results_df0 = results_df.loc[results_df["lambdah"] <0.0001,:]
+results_df0["Type"] = "No HC"
+pareto_front0 = pareto_frontier(results_df0, ['topology_energy', 'topography_energy'])
+pareto_front0 = pareto_front0.drop(columns=["x_value","alpha"])
+
+pareto_front = pd.concat([pareto_front, pareto_front0])
 
 
-# Define objective weights (example based on rank importance)
-objective_weights = {"objective1": 0.6, "objective2": 0.4}
+sns.kdeplot(pareto_front, x = "total_energy", hue = "Type")
 
-# Apply the ranking function
-ranked_pareto_df, best_solution = rank_pareto_solutions(pareto_df, ["objective1", "objective2"], objective_weights)
+sns.kdeplot(pareto_front, x = "topology_energy", hue = "Type")
 
-# Display the ranked Pareto DataFrame and the best solution
-import ace_tools as tools; tools.display_dataframe_to_user(name="Ranked Pareto Solutions", dataframe=ranked_pareto_df)
-
-print("Best Pareto Solution:")
-print(best_solution)
-
-
-
-
-
-
-
-
-
-
+sns.kdeplot(pareto_front, x = "topography_energy", hue = "Connections")
 
 
 
 
+sns.kdeplot(pareto_front, x = "eta", hue = "Connections")
+plt.xlim((-5,0))
+
+sns.kdeplot(pareto_front, x = "gamma", hue = "Connections")
+plt.xlim((0,1))
+
+sns.kdeplot(pareto_front, x = "lambdah", hue = "Connections")
+plt.xlim((0,5))
+
+sns.kdeplot(pareto_front, x = "z_value", hue = "Connections")
+
+sns.kdeplot(pareto_front, x = "y_value", hue = "Connections")
 
 
 
 
 
 
+
+#results_df = results_df.loc[results_df["lambdah"] <0.0001,:]
 
 
 which_energy = 'total_energy'
@@ -202,18 +231,18 @@ plt.show()
 
 # Plot energy values for each combination of eta and lambdah, fixing gamma and alpha
 eta_lambdah_fixed_df = results_df[
-    (results_df['gamma'] == best_gamma) & 
+    (results_df['eta'] == best_eta) & 
     (results_df['alpha'] == best_alpha) &
     (results_df['y_value'] == best_y) &
     (results_df['z_value'] == best_z)
 ]
-eta_lambdah_pivot = eta_lambdah_fixed_df.pivot(index='eta', columns='lambdah', values=which_energy)
+eta_lambdah_pivot = eta_lambdah_fixed_df.pivot(index='gamma', columns='lambdah', values=which_energy)
 
 plt.figure(figsize=(10, 8))
 sns.heatmap(eta_lambdah_pivot, annot=True, cmap='viridis')
-plt.title(f'Energy Heatmap for eta vs lambdah (gamma={best_gamma}, alpha={best_alpha})')
+plt.title(f'Energy Heatmap for gamma vs lambdah (gamma={best_gamma}, alpha={best_alpha})')
 plt.xlabel('lambdah')
-plt.ylabel('eta')
+plt.ylabel('gamma')
 plt.show()
 
 # Plot energy values for each combination of gamma and alpha, fixing eta and lambdah
@@ -246,6 +275,90 @@ sns.heatmap(y_z_pivot, annot=True, cmap='viridis')
 plt.xlabel('y')
 plt.ylabel('z')
 plt.show()
+
+
+
+
+
+
+###############################################################################
+
+
+which_energy = 'total_energy'
+# Dynamically extract the best parameter values for the selected starting node
+best_params = results_df.loc[results_df[which_energy].idxmin()]
+best_eta = best_params['eta']
+best_gamma = best_params['gamma']
+best_lambdah = best_params['lambdah']
+best_alpha = best_params['alpha']
+best_y = best_params['y_value']
+best_z = best_params['z_value']
+
+
+
+y_fixed_df = results_df[
+    (results_df['y_value'] == best_y) & 
+    (results_df['lambdah'] == best_lambdah) &
+    (results_df['gamma'] == best_gamma) &
+    (results_df['alpha'] == best_alpha) &
+    (results_df['z_value'] == best_z)
+]
+
+best_params = results_df2.loc[results_df[which_energy].idxmin()]
+best_eta = best_params['eta']
+best_gamma = best_params['gamma']
+best_lambdah = best_params['lambdah']
+best_alpha = best_params['alpha']
+best_y = best_params['y_value']
+best_z = best_params['z_value']
+
+
+
+y_fixed_df2 = results_df2[
+    (results_df2['y_value'] == best_y) & 
+    (results_df2['lambdah'] == best_lambdah) &
+    (results_df2['gamma'] == best_gamma) &
+    (results_df2['alpha'] == best_alpha) &
+    (results_df2['z_value'] == best_z)
+]
+
+y_fixed_df = pd.concat([y_fixed_df, y_fixed_df2])
+
+
+best_params = results_df0.loc[results_df0[which_energy].idxmin()]
+best_eta = best_params['eta']
+best_gamma = best_params['gamma']
+best_lambdah = best_params['lambdah']
+best_alpha = best_params['alpha']
+best_y = best_params['y_value']
+best_z = best_params['z_value']
+
+
+
+y_fixed_df2 = results_df0[
+    (results_df0['y_value'] == best_y) & 
+    (results_df0['lambdah'] == best_lambdah) &
+    (results_df0['gamma'] == best_gamma) &
+    (results_df0['alpha'] == best_alpha) &
+    (results_df0['z_value'] == best_z)
+]
+
+y_fixed_df = pd.concat([y_fixed_df, y_fixed_df2])
+
+plt.figure(figsize=(10, 8))
+sns.kdeplot(y_fixed_df, x = "eta", y = "total_energy", hue="Connections")
+
+plt.legend()
+plt.show()
+
+
+
+
+plt.figure(figsize=(10, 8))
+sns.kdeplot(pareto_front, x = "z_value")
+plt.show()
+
+
 
 # one is consistently best (thalamus?) but there might be multiple gradients
 
@@ -414,5 +527,40 @@ ax.set_zlabel('Z-axis')
 ax.legend()
 plt.title('Sample Points Inside and Outside the Brain Convex Hull')
 plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

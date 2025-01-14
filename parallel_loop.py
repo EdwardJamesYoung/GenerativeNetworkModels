@@ -116,7 +116,8 @@ def run_model(x_value, y_value, z_value,
               run, seed_adjacency_matrix, distance_matrix, W, 
               consensus_matrix, coord, num_seed_edges, 
               distance_relationship_type, matching_relationship_type, beta,
-              set_cumulative, set_local, sigma):
+              set_cumulative, set_local, sigma,
+              return_gnm = False):
     """
     Function to run a single model and return the result.
     """
@@ -146,13 +147,13 @@ def run_model(x_value, y_value, z_value,
     )
 
     # Train the model
-    gnm.train_loop(
+    edges, adj, wts = gnm.train_loop(
         num_iterations=int(num_seed_edges),
         binary_updates_per_iteration=1,
-        weighted_updates_per_iteration=1,
+        weighted_updates_per_iteration=0,
         heterochronous_matrix = heterochronous_matrix
     )
-
+    print(wts)
     # Take the weighted adjacency matrix (i.e., final synthetic network)
     Abin = gnm.adjacency_matrix.numpy()
 
@@ -209,7 +210,7 @@ def run_model(x_value, y_value, z_value,
     # --- Combine Energies ---
     total_energy = beta * topology_energy + (1 - beta) * topography_energy
 
-    return {
+    results = {
         'x_value': x_value,
         'y_value': y_value,
         'z_value': z_value,
@@ -224,6 +225,11 @@ def run_model(x_value, y_value, z_value,
         'topography_energy': topography_energy,
         'total_energy': total_energy,
     }
+
+    if return_gnm:
+        results['gnm'] = gnm
+
+    return results
 
 
 def run_parallel_models(
@@ -254,8 +260,8 @@ def run_parallel_models(
     results_df = pd.DataFrame(results)
 
     # Save or visualize results
-    results_df.to_csv("results_simple_local.csv", index=False)
-    print("Modeling complete. Results saved to 'results.csv'.")
+    results_df.to_csv("results_cumulative_global.csv", index=False)
+    print("Modeling complete. Results saved.")
 
 if __name__ == "__main__":    
     # Load the provided .mat file to explore its contents
@@ -317,8 +323,8 @@ if __name__ == "__main__":
 
     # Define the energy (beta = 1 for 'topology' or beta = 0 for 'topography')
     beta = 0.5
-    set_cumulative = False
-    set_local = True
+    set_cumulative = True
+    set_local = False
 
     # Initialize an empty list to store results
     results = []

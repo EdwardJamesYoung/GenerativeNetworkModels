@@ -305,8 +305,13 @@ class GenerativeNetworkModel():
             for jj in range(weighted_updates_per_iteration):
                 weight_matrix = self.weighted_update()
                 weight_snapshots[:,:,ii*weighted_updates_per_iteration + jj] = weight_matrix
-
+        
+        self.added_edges_list = added_edges_list
+        self.adjacency_snapshots = adjacency_snapshots
+        #self.weight_snapshots = weight_snapshots
+        
         if weighted_updates_per_iteration == 0:
-            return added_edges_list, adjacency_snapshots, None
-
-        return added_edges_list, adjacency_snapshots, weight_snapshots
+            return self.added_edges_list, self.adjacency_snapshots, None
+        
+        
+        return self.added_edges_list, self.adjacency_snapshots, self.weight_snapshots
