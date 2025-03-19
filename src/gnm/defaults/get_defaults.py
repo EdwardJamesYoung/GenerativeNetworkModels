@@ -25,6 +25,7 @@ import os
 from jaxtyping import Float, jaxtyped
 from typing import Optional
 from typeguard import typechecked
+import numpy as np
 
 from gnm.utils import binary_checks, weighted_checks
 
