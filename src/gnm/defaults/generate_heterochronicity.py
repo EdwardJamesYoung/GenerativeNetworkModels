@@ -11,19 +11,40 @@ def generate_heterochronicity(
     local=False
 ):
     """
-    Generate heterochronous matrices based on a dynamic starting node.
+    Generate heterochronous adjacency matrices based on distances from a 
+    specified origin point.
 
-    Parameters:
-    - coord (array): Coordinates of nodes.
-    - starting_node_index (int): Index of the node to use as the starting point.
-    - sigma (float): Standard deviation for the Gaussian.
-    - num_connections (int): Number of time steps/edges.
-    - mseed (int): Number of seed nodes to exclude from computation.
-    - cumulative (bool): Whether to apply cumulative maximum.
-    - local (bool): Whether to generate connections locally or globally.
+    Parameters
+    ----------
+    coordinates : array-like
+        x-y-z coordinates of nodes, shape (N, 3).
+    origin_point : array-like, optional
+        The origin for distance calculations, shape (3,). Default is [0, 0, 0].
+    sigma : float, optional
+        Standard deviation for the Gaussian function used to compute 
+        heterochronicity. Default is 1.0.
+    num_connections : int, optional
+        Total number of time steps to consider. Default is 100.
+    mseed : int, optional
+        Number of initial time steps to exclude from the time-series 
+        (effectively using only `num_connections - mseed` steps). Default is 0.
+    cumulative : bool, optional
+        If True, the heterochronicity values are accumulated over time 
+        (via cumulative maximum). 
+        Default is True.
+    local : bool, optional
+        If True, each adjacency matrix at time t is given by the outer product 
+        of the heterochronicity vector at that time, thus skewing towards 
+        connections that are closer in space (i.e., local).
+        If False, the adjacency matrix is formed by the per-element maximum of
+        each pair of node values, thus allowing any connection (i.e., global)
+        Default is False.
 
-    Returns:
-    - torch.tensor: Heterochronous matrices tensor.
+    Returns
+    -------
+    torch.Tensor
+        A tensor of shape (T, N, N) where T = num_connections - mseed,
+        representing the heterochronous adjacency matrix for each time step.
     """
 
     # Compute euclidean distances from coordinates
