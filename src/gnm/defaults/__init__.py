@@ -18,7 +18,6 @@ Functions:
     get_coordinates: Load default 3D coordinates
     get_binary_network: Load a default binary network
     get_weighted_network: Load a default weighted network
-    generate_heterochronicity: generate matrices for spatio-temporal constraints
 """
 
 from .get_defaults import (
@@ -26,8 +25,7 @@ from .get_defaults import (
     get_distance_matrix,
     get_coordinates,
     get_binary_network,
-    get_weighted_network,
-    generate_heterochronicity
+    get_weighted_network
 )
 
 __all__ = [
@@ -35,6 +33,5 @@ __all__ = [
     "get_distance_matrix",
     "get_coordinates",
     "get_binary_network",
-    "get_weighted_network",
-    "generate_heterochronicity",
+    "get_weighted_network"
 ]
