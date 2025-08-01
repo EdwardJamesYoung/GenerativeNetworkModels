@@ -1,68 +1,92 @@
-import numpy as np
 import torch
-
+import math
+from typing import Sequence, Union
 
 # Function to generate heterochronous matrices
 def generate_heterochronous_matrix(
-    coord,
-    reference_coord=[0, 0, 0],
-    sigma=1.0,
-    num_nodes=100,
-    mseed=0,
-    cumulative=False,
-    local=True,
-):
+    coord: torch.Tensor,
+    reference_coord: Union[Sequence[float], torch.Tensor] = (0, 0, 0),
+    sigma: float = 1.0,
+    num_nodes: int = 100,
+    mseed: int = 0,
+    cumulative: bool = False,
+    local: bool = True,
+) -> torch.Tensor:
     """
     Generate heterochronous matrices based on a dynamic starting node.
 
-    Parameters:
-    - coord (array): Coordinates of nodes.
-    - starting_node_index (int): Index of the node to use as the starting point.
-    - sigma (float): Standard deviation for the Gaussian.
-    - num_nodes (int): Number of time steps/nodes.
-    - mseed (int): Number of seed nodes to exclude from computation.
-    - cumulative (bool): Whether to apply cumulative maximum.
-    - local (bool): Whether to generate matrices locally or globally.
+    Parameters
+    ----------
+    coord : torch.Tensor, shape (N, 3)
+        Node coordinates.
+    reference_coord : 3-vector, default (0,0,0)
+        Starting point for distance computation.
+    sigma : float
+        Standard deviation for the Gaussian profile.
+    num_nodes : int
+        Number of time steps / nodes (T + mseed).
+    mseed : int
+        Number of seed nodes excluded from Gaussian schedule.
+    cumulative : bool
+        If True, apply cumulative maximum over time.
+    local : bool
+        If True, use outer-product rule; otherwise use global max rule.
 
-    Returns:
-    - torch.tensor: Heterochronous matrices tensor.
+    Returns
+    -------
+    torch.Tensor, shape (N, N, T)
+        Stack of heterochronous adjacency matrices (float32).
     """
+    # Ensure torch tensors & float dtype
+    coord = coord.float()
+    ref   = torch.as_tensor(reference_coord, dtype=coord.dtype,
+                            device=coord.device)
 
-    # Compute Euclidean distances from the reference node to all nodes
-    distances = np.sqrt(np.sum((coord - reference_coord) ** 2, axis=1))
-    max_distance = np.max(distances)  # Maximum distance for setting Gaussian means
+    # Compute Euclidean distances from reference node to all nodes
+    distances   = torch.linalg.norm(coord - ref, dim=1)            # (N,)
+    max_distance= distances.max()
 
-    # Calculate means for Gaussian function at each time step
-    means = np.linspace(0, max_distance, num_nodes - mseed)
-    heterochronous_matrix = np.zeros((len(distances), num_nodes - mseed))
-    P = lambda d, mu: (1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(
-        -((d - mu) ** 2) / (2 * sigma**2)
-    )
+    # Means for Gaussian at each time step
+    T        = num_nodes - mseed
+    means    = torch.linspace(0., max_distance, T,
+                              dtype=coord.dtype, device=coord.device)  # (T,)
 
-    # Calculate probabilities at each time step
-    for t in range(num_nodes - mseed):
+    # Allocate probability matrix (N, T)
+    heterochronous_matrix = torch.empty(coord.size(0), T,
+                                        dtype=coord.dtype,
+                                        device=coord.device)
+
+    # Gaussian probability function
+    coeff = 1.0 / (math.sqrt(2*math.pi) * sigma)
+    for t in range(T):
         mu = means[t]
-        heterochronous_matrix[:, t] = P(distances, mu)
-        # heterochronous_matrix[:, -1 - t] = P(distances, mu)
+        heterochronous_matrix[:, t] = coeff * torch.exp(
+            -((distances - mu) ** 2) / (2 * sigma**2)
+        )
 
     # Apply cumulative maximum if requested
     if cumulative:
-        heterochronous_matrix = np.maximum.accumulate(heterochronous_matrix, axis=1)
+        heterochronous_matrix = torch.cummax(
+            heterochronous_matrix, dim=1).values                  # (N, T)
 
-    # Convert to matrix form based on local parameter
+    # Convert to matrix form based on `local`
     heterochronous_matrices = []
-    for t in range(num_nodes - mseed):
-        Ht = heterochronous_matrix[:, t]
-        H_rescaled = (Ht - np.min(Ht)) / (np.max(Ht) - np.min(Ht))
+    for t in range(T):
+        Ht = heterochronous_matrix[:, t]                          # (N,)
+        H_rescaled = (Ht - Ht.min()) / (Ht.max() - Ht.min())
         if local:
-            Hmat = np.outer(H_rescaled, H_rescaled)
+            Hmat = torch.outer(H_rescaled, H_rescaled)            # (N, N)
         else:
-            N = len(H_rescaled)
-            rows, cols = np.meshgrid(np.arange(N), np.arange(N), indexing="ij")
-            Hmat = np.maximum(H_rescaled[rows], H_rescaled[cols])
+            N = H_rescaled.size(0)
+            rows = H_rescaled.unsqueeze(1).expand(N, N)
+            cols = H_rescaled.unsqueeze(0).expand(N, N)
+            Hmat = torch.maximum(rows, cols)                      # (N, N)
         heterochronous_matrices.append(Hmat)
 
-    heterochronous_matrices_tensor = torch.tensor(
-        np.stack(heterochronous_matrices, axis=-1), dtype=torch.float32
-    )
+    heterochronous_matrices_tensor = torch.stack(
+        heterochronous_matrices, dim=-1).float()                  # (N, N, T)
+
+    heterochronous_matrices_tensor = heterochronous_matrices_tensor.permute(2, 0, 1).contiguous()  # (T, N, N)
+
+
     return heterochronous_matrices_tensor
