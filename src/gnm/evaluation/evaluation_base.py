@@ -295,6 +295,14 @@ class CorrelationCriterion(EvaluationCriterion, ABC):
                 [num_nodes, num_nodes]. This can help account for registration errors
                 or spatial uncertainty in brain networks.
         """
+        # Verify that the rows of the smoothing matrix sum to 1
+
+        if not torch.allclose(
+            torch.einsum("ij->i", smoothing_matrix),
+            torch.tensor(1.0, device=smoothing_matrix.device),
+        ):
+            raise ValueError("Rows of the smoothing matrix must sum to 1.")
+
         self.smoothing_matrix = smoothing_matrix
 
     @jaxtyped(typechecker=typechecked)
@@ -326,11 +334,11 @@ class CorrelationCriterion(EvaluationCriterion, ABC):
         synthetic_statistics = self._get_graph_statistics(synthetic_matrices)
         real_statistics = self._get_graph_statistics(real_matrices)
 
-        smoothed_synthetic_statistics = torch.matmul(
-            synthetic_statistics, self.smoothing_matrix
+        smoothed_synthetic_statistics = torch.einsum(
+            "nj,ij->ni", synthetic_statistics, self.smoothing_matrix
         )  # Shape [num_synthetic_networks num_nodes]
-        smoothed_real_statistics = torch.matmul(
-            real_statistics, self.smoothing_matrix
+        smoothed_real_statistics = torch.einsum(
+            "nj,ij->ni", real_statistics, self.smoothing_matrix
         )  # Shape [num_real_networks num_nodes]
 
         # Compute correlation coefficients between all pairs of distributions

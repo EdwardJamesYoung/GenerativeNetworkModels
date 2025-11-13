@@ -41,8 +41,14 @@ from .weighted_ks_criteria import (
 
 from .binary_corr_criteria import (
     DegreeCorrelation,
-    ClusteringCorrelation,
-    BetweennessCorrelation,
+    BinaryBetweennessCorrelation,
+    BinaryClusteringCorrelation,
+)
+
+from .weighted_corr_criteria import (
+    StrengthCorrelation,
+    WeightedBetweennessCorrelation,
+    WeightedClusteringCorrelation,
 )
 
 __all__ = [
@@ -63,6 +69,9 @@ __all__ = [
     "WeightedBetweennessKS",
     "WeightedClusteringKS",
     "DegreeCorrelation",
-    "ClusteringCorrelation",
-    "BetweennessCorrelation",
+    "BinaryClusteringCorrelation",
+    "BinaryBetweennessCorrelation",
+    "StrengthCorrelation",
+    "WeightedBetweennessCorrelation",
+    "WeightedClusteringCorrelation",
 ]

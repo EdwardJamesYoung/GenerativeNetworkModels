@@ -26,6 +26,7 @@ from .get_defaults import (
     get_coordinates,
     get_binary_network,
     get_weighted_network,
+    get_smoothing_matrix,
 )
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "get_coordinates",
     "get_binary_network",
     "get_weighted_network",
+    "get_smoothing_matrix",
 ]

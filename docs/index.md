@@ -1,4 +1,4 @@
-# Weighted Generative Network Model Toolbox
+# Generative Network Model Toolbox
 
 ## Description
 Generative network models have been used extensively in research in previous years to explore microstructural and functional connectomics. Binary generative models (BGM), though powerful, are unable to reflect to extent to which nodes in a network are connected. Weighted generative models (WGM) were introduced to resolve this limitation. The tools provided here, grounded in graph theory, provide a computationally efficient and intuative method of implementing WGMs.
@@ -7,7 +7,7 @@ The aim of this project was to make GNMs more accessable to the wider research c
 
 ## Table of Contents
 - [Getting Started](getting-started.md)
-- [Understanding Geneartive Network Models](understanding-gnms/index.md)
+- [Understanding Generative Network Models](understanding-gnms/index.md)
 - [User Guide](user-guide/index.md)
 - [API Reference](api-reference/index.md)
     - [model](api-reference/model.md)

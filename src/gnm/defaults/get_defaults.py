@@ -289,3 +289,40 @@ def get_weighted_network(
     weighted_checks(weighted_networks)
 
     return weighted_networks
+
+
+def get_smoothing_matrix(
+    distance_matrix: Float[torch.Tensor, "num_nodes num_nodes"],
+    scale: float = 0.1,
+) -> Float[torch.Tensor, "num_nodes num_nodes"]:
+    r"""Create a Gaussian smoothing matrix from a distance matrix.
+
+    This function generates a smoothing matrix based on the provided distance matrix
+    using a Gaussian kernel with a specified sigma value. The resulting matrix can be
+    used to spatially smooth network properties.
+
+    Args:
+        distance_matrix: Distance matrix with shape [num_nodes, num_nodes].
+        sigma: Standard deviation for the Gaussian kernel. Default is 15.0.
+
+    Returns:
+        A tensor representing the smoothing matrix with shape [num_nodes, num_nodes].
+
+    Examples:
+        >>> import torch
+        >>> from gnm.defaults import get_distance_matrix, get_smoothing_matrix
+        >>> dist_matrix = get_distance_matrix()
+        >>> smoothing_matrix = get_smoothing_matrix(dist_matrix)
+        >>> smoothing_matrix.shape
+        torch.Size([90, 90])
+    """
+    median_distance = distance_matrix[distance_matrix > 0].median().item()
+
+    sigma = scale * median_distance
+
+    smoothing_matrix = torch.exp(-(distance_matrix**2) / (2 * sigma**2))
+
+    # Ensure that each row sums to 1
+    smoothing_matrix = smoothing_matrix / smoothing_matrix.sum(axis=1, keepdims=True)
+
+    return smoothing_matrix

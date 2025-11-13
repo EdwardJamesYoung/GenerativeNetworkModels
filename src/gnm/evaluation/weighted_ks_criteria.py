@@ -9,12 +9,15 @@ weighted clustering coefficients, and weighted betweenness centrality.
 import torch
 from jaxtyping import Float, jaxtyped
 from typeguard import typechecked
-import networkx as nx
 from typing import Optional
 
 from .evaluation_base import KSCriterion, WeightedEvaluationCriterion
 
-from gnm.utils import node_strengths, weighted_clustering_coefficients
+from gnm.utils import (
+    node_strengths,
+    weighted_clustering_coefficients,
+    weighted_betweenness_centrality,
+)
 
 
 class WeightedNodeStrengthKS(KSCriterion, WeightedEvaluationCriterion):
@@ -74,7 +77,7 @@ class WeightedNodeStrengthKS(KSCriterion, WeightedEvaluationCriterion):
             Tensor of node strengths with shape [num_networks, num_nodes]
         """
         if self.normalise:
-            return node_strengths(matrices / matrices.amax(dim=-1, keepdim=True))
+            return node_strengths(matrices / matrices.amax(dim=(-1, -2), keepdim=True))
         else:
             return node_strengths(matrices)
 
@@ -115,7 +118,11 @@ class WeightedBetweennessKS(KSCriterion, WeightedEvaluationCriterion):
     """
 
     @jaxtyped(typechecker=typechecked)
-    def __init__(self, normalise: Optional[bool] = True):
+    def __init__(
+        self,
+        normalise: bool = True,
+        invert_weights: bool = True,
+    ):
         """
         Args:
             normalise: If True, normalise the weights of the network by the maximum weight in the network. Defaults to True.
@@ -123,6 +130,7 @@ class WeightedBetweennessKS(KSCriterion, WeightedEvaluationCriterion):
         KSCriterion.__init__(self)
         WeightedEvaluationCriterion.__init__(self)
         self.normalise = normalise
+        self.invert_weights = invert_weights
 
     @jaxtyped(typechecker=typechecked)
     def _get_graph_statistics(
@@ -136,21 +144,11 @@ class WeightedBetweennessKS(KSCriterion, WeightedEvaluationCriterion):
         Returns:
             torch.Tensor: array of weighted betweenness centralities
         """
-        if self.normalise:
-            to_graph = matrices / matrices.amax(dim=-1, keepdim=True)
-        else:
-            to_graph = matrices
-
-        betweenness_values = []
-        for network_idx in range(to_graph.shape[0]):
-            # Convert to networkx for betweenness calculation
-            G = nx.from_numpy_array(to_graph[network_idx].detach().cpu().numpy())
-            betweenness = nx.betweenness_centrality(G, weight="weight")
-            # Convert dict to list preserving node order
-            betweenness_values.append(
-                torch.tensor([betweenness[i] for i in range(len(betweenness))])
-            )
-        return torch.stack(betweenness_values)
+        return weighted_betweenness_centrality(
+            matrices,
+            normalised=self.normalise,
+            invert_weights=self.invert_weights,
+        )
 
 
 class WeightedClusteringKS(KSCriterion, WeightedEvaluationCriterion):

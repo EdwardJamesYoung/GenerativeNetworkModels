@@ -199,3 +199,16 @@
         font-size: 0.9em;
     }
 }
+
+
+.figure-caption {
+    text-align: center;
+    font-size: 0.9em;
+    margin: 0.5em auto 2em auto;
+    max-width: 90%;
+    color: var(--md-default-fg-color--light);
+}
+
+.figure-caption strong {
+    color: var(--md-primary-fg-color);
+}

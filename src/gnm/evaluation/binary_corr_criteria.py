@@ -1,8 +1,8 @@
 r"""Correlation-based criteria for evaluating binary networks.
 
 This module provides evaluation criteria based on spatial correlations of network
-properties between synthetic and real binary networks. These criteria quantify 
-the similarity in the spatial patterns of degrees, clustering coefficients, and 
+properties between synthetic and real binary networks. These criteria quantify
+the similarity in the spatial patterns of degrees, clustering coefficients, and
 betweenness centrality, which is important for capturing the spatial organization
 of brain networks.
 """
@@ -75,7 +75,7 @@ class DegreeCorrelation(CorrelationCriterion, BinaryEvaluationCriterion):
         return matrices.sum(dim=-1)
 
 
-class ClusteringCorrelation(CorrelationCriterion, BinaryEvaluationCriterion):
+class BinaryClusteringCorrelation(CorrelationCriterion, BinaryEvaluationCriterion):
     r"""Compare spatial patterns of clustering coefficients using correlation.
 
     This criterion measures the similarity between the spatial patterns of clustering
@@ -134,7 +134,7 @@ class ClusteringCorrelation(CorrelationCriterion, BinaryEvaluationCriterion):
         return binary_clustering_coefficients(matrices)
 
 
-class BetweennessCorrelation(CorrelationCriterion, BinaryEvaluationCriterion):
+class BinaryBetweennessCorrelation(CorrelationCriterion, BinaryEvaluationCriterion):
     r"""Compare spatial patterns of betweenness centrality using correlation.
 
     This criterion measures the similarity between the spatial patterns of betweenness

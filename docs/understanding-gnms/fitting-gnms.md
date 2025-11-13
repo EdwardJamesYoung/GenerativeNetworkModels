@@ -1,10 +1,12 @@
 # Fitting Generative Network Models
 
-The likelihood that a Generative Network Model will produce a particular network is controlled by parameters $\eta$ and $\gamma$ which determine how the distance and affinity transforms, $d$ and $k$, are derived from the distance and affinity matrices, $D$ and $K$. As [discussed above](binary-gnms.md#the-binary-generative-network-model), it is very hard to compute in general the likelihood that any given parameter pair (and generative rule) will output a particular weight matrix. Instead, the parameters of the GNM are typically fit by generating many networks for each choice of parameters, and asking which choice of parameters produces networks that whose topology most accurately matches that seen in real brain networks. This section outlines the fitting procedure by which we determine which parameters give the best match to empirical data.
+The likelihood that a Generative Network Model will produce a particular network is controlled by parameters $\eta$ and $\gamma$ which determine how the distance and affinity transforms, $d$ and $k$, are derived from the distance and affinity matrices, $D$ and $K$. As [discussed above](binary-gnms.md#the-binary-generative-network-model), it is not generally computationally tractable to compute the likelihood that any given parameter pair (and rule for computing affinities) will output a particular adjacency matrix. Instead, the parameters of the GNM are typically fit by generating many networks for each choice of parameters, and asking which choice of parameters produces networks that whose topology most accurately matches that seen in real brain networks. This section outlines the fitting procedure by which we determine which parameters give the best match to empirical data.
 
 ## Kolmogorov-Smirnov Measures of Topological Fit
 
-A [distribution](glossary.md#distribution) describes the collection of values taken by a particular network measure across all elements in a [network](glossary.md#network). For instance, the [degree](glossary.md#degree) [distribution](glossary.md#distribution) is the [degree](glossary.md#degree) of each [node](glossary.md#node) in the [network](glossary.md#network), whilst the [edge length](glossary.md#edge-length) [distribution](glossary.md#distribution) is the distance spanned by each [edge](glossary.md#edge) in the [network](glossary.md#network). One way of measuring similarity between networks is to measure the similarity between the distributions of various network measures between the networks.
+The binary GNM aims to produce networks which have the same distributions of topological features as the networks found in real brains. Intuitively, this means that betweem the real and synthetic networks, there are an equal number of nodes that are highly or minimially clustered; an equal number of nodes that are highly or minimally connected; and an equal number of connections that are long or short. Importantly, topological similarity does not require that it is the same nodes in the real and synthetic network that are, for example, highly clustered. Two graphs may therefore have a very high topological similarity while the connection profile of each individual node looks remarkably different. Here, we make the notion of topological similarity we have just described rigorous with through the notion of a  distribution function. We will then discuss various different node-level features whose distributions we aim to match between real and synthetic networks.   
+
+A [distribution](glossary.md#distribution) describes the collection of values taken by a particular network measure across all elements in a [network](glossary.md#network). For instance, the [degree](glossary.md#degree) [distribution](glossary.md#distribution) is the [degree](glossary.md#degree) of each [node](glossary.md#node) in the [network](glossary.md#network), whilst the [edge length](glossary.md#edge-length) [distribution](glossary.md#distribution) is the distance spanned by each [edge](glossary.md#edge) in the [network](glossary.md#network). One way of measuring topological similarity between networks is to measure the similarity between the distributions of various network measures between the networks.
 
 To compare [distributions](glossary.md#distribution) between synthetic and empirical [networks](glossary.md#network), we use the Kolmogorov-Smirnov (KS) distance between those distributions. The KS distance begins with the [cumulative distribution functions](glossary.md#cumulative-distribution-function) for each of the two distributions. A cumulative distribution function at a given point is the fraction of values in the [distribution](glossary.md#distribution) that are less than or equal to that point. For example, if we have [degrees](glossary.md#degree) of 1, 3, 5, 7, and 9 across five [nodes](glossary.md#node), the CDF at the point 5 would be 0.6, since three out of five values (1, 3, and 5) are less than or equal to 5. From the CDF for the synthetic and empirical distribution over network properties, the KS distance can then be computed as the maximum difference between the CDFs. $$
 \mathrm{KS} = \max_x | F_{\mathrm{empirical}}(x) - F_{\mathrm{synthetic}}(x) |
@@ -12,7 +14,14 @@ $$ The KS distance ranges from 0 (identical [distributions](glossary.md#distribu
 
 For any two networks we wish to compare (*i.e.*, empirical and synthetic), we can obtain a KS distance for each network measure of interest. For example, we may compute the degree KS distance and the clustering coefficient KS distance. Note that these distances are in general different; networks can have a very similar distribution of degrees while having very different distributions of clustering coefficients. [Below](#statistics-for-binary-network-fitting), we give various network measures for which we typically compute the KS distance when attempting to fit the parameters of a binary GNM.
 
-### Statistics for Binary Network Fitting {#statistics-for-binary-network-fitting}
+![Figure 4](figures-png/fig4.png)
+
+<div class="figure-caption" id="fig-4">
+<strong>Figure 4.</strong> Grid search parameter space showing the systematic exploration of η and γ values with corresponding energy landscapes. The colour scale represents the energy values, with darker regions indicating lower energy (better fit) parameter combinations.
+</div>
+
+
+### Statistics for Binary Network Fitting
 
 There are four network statistics typically used to quantify fit between an empirical and synthetic network in the GNM: degree, clustering coefficient, betweenness centrality, and edge length.
 
@@ -22,7 +31,7 @@ The [clustering coefficient](glossary.md#clustering-coefficient), $c_i$ of a [no
 
 [Betweenness centrality](glossary.md#betweenness-centrality) quantifies how often a [node](glossary.md#node) sits on the [shortest paths](glossary.md#shortest-path) between other [nodes](glossary.md#node) in the [network](glossary.md#network). The [betweenness centrality](glossary.md#betweenness-centrality) of a [node](glossary.md#node) $i$ is the fraction of pairs of other nodes in the network for which the [shortest paths](glossary.md#shortest-path) between those nodes passes through $i$. See [Node-Level Measures](networks-and-graphs.md#node-level-measures) for a more detailed explanation of [betweenness centrality](glossary.md#betweenness-centrality).
 
-Finally, the [edge length](glossary.md#edge-length) of an [edge](glossary.md#edge) represents the physical distance between [nodes](glossary.md#node) connected by that [edge](glossary.md#edge). In particular, if $i$ and $j$ are connected (*i.e.*, $A_{ij} = 1$), then the edge length of their connection is $D_{ij}$ where $D$ is the distance matrix. The edge length [distribution](glossary.md#distribution) typically shows an overrepresentation of short connections compared to what would be expected from random wiring, reflecting the influence of spatial constraints on [network](glossary.md#network) formation.
+Finally, the [edge length](glossary.md#edge-length) of an [edge](glossary.md#edge) represents the physical distance between [nodes](glossary.md#node) connected by that [edge](glossary.md#edge). In particular, if $i$ and $j$ are connected (*i.e.*, $A_{ij} = 1$), then the edge length of their connection is $D_{ij}$ where $D$ is the distance matrix. The edge length [distribution](glossary.md#distribution) typically shows an overrepresentation of short connections compared to what would be expected from random wiring, reflecting the influence of spatial constraints on [network](glossary.md#network) formation. Note that edge length is the only feature included here which is not purely topological, since it depends on the position of the nodes in the network in physical space. 
 
 ### Statistics for Weighted Network Fitting
 
@@ -42,7 +51,7 @@ To capture topographical fit, we use the [correlation](glossary.md#correlation) 
 \tilde{\Omega}\_{ij} = \exp\left(-\frac{D\_{ij}^2}{2\sigma^2}\right).
 $$ For each node $i$, a larger weight is assigned to those nodes $j$ which are closer to $i$ in space (*i.e.*, have a lower value of $D_{ij}$). The parameter $\sigma$ controls the spatial scale of the smoothing. These weights do not sum to $1$, so we normalise by performing $$
 \Omega\_{ij} = \frac{\tilde{\Omega}\_{ij}}{\sum\_k \tilde{\Omega}\_{ik} }.
-$$ The node-level property is then smoothed using these weights to obtain \$\sum\*j\* \Omega{ij} X_j\$. The correlation between these smoothed quantities across the two networks quantifies the degree of topographical fit.
+$$ The node-level property is then smoothed using these weights to obtain $\sum_j \Omega_{ij} X_j$. The correlation between these smoothed quantities across the two networks quantifies the degree of topographical fit.
 
 The properties used for correlational fit measures are the same as those used for topological fit: degree, clustering, and betweenness centrality.
 
@@ -52,11 +61,9 @@ Having computed both *topological* and *topographical* measures for the empirica
 
 Depending on whether we are interested in generating synthetic connectomes which resembles real ones in terms of topology, topography, or both, we will change our energy function.
 
-### Topological Energy {#binary-ks-energy}
+### Topological Energy 
 
 Having computed a set of KS distances for a variety of network measures, we combine them into a single measure called the energy. For binary networks, the energy is defined as $$ E = \max\left( \text{KS}\_{\text{degree}}, \text{KS}\_{\text{clustering}}, \text{KS}\_{\text{betweenness}}, \text{KS}\_{\text{edge length}} \right), $$ where each KS term represents the [Kolmogorov-Smirnov distance](glossary.md#kolmogorov-smirnov-ks-distance) between the [distributions](glossary.md#distribution) of that property in the synthetic and empirical [networks](glossary.md#network). Lower energies indicate better agreement between the [network](glossary.md#network) [topology](glossary.md#topology) generated by the model and the real [network](glossary.md#network) [topology](glossary.md#topology).
-
-![Figure 4](figures-png/fig4.png)
 
 For weighted [networks](glossary.md#network), energy is computed similarly but uses weighted versions of [network](glossary.md#network) properties and excludes [edge length](glossary.md#edge-length) (since this is a property of the spatial embedding rather than the weight structure):
 $$
@@ -66,17 +73,16 @@ Taking the maximum enforces *multi-objective* fidelity: a model must match **all
 
 Implementation details for energy computation can be found in the [`gnm.evaluation`](../api-reference/evaluation.md) module, which provides comprehensive evaluation criteria for both binary and weighted [networks](glossary.md#network).
 
-### Topographical Energy {#topographical-energy}
+### Topographical Energy 
 
-While we have seen how to compute correlational measures of topography, we now want to use them to compute the energy. Correlations are in the range $[-1, 1]$, but we want a final metric in the range $[0,1]$ (as topological energy) and where lower numbers indicate better fit. Thus, we map correlation to error via a linear transform that treats $r=1$ as perfect alignment ($e=0$) and $r=-1$ as maximal misalignment ($e=1$): $$ e_X = 1 - \frac{r_X + 1}{2} = \frac{1 - r_X}{2}. $$
+While we have seen how to compute correlational measures of topography, we now want to use them to compute the energy. Correlations are in the range $[-1, 1]$, but we want a final metric in the range $[0,1]$ (as with topological energy), where lower numbers indicate better fit. Thus, we map correlation to energy via a linear transform that treats $\rho=1$ as perfect alignment ($e=0$) and $\rho=-1$ as maximal misalignment ($e=1$): $$ e_X = 1 - \frac{\rho_X + 1}{2} = \frac{1 - \rho_X}{2}. $$
 
-Then, we can aggregate across properties. The topographical energy is the maximum error across the three properties: $$ E_{\text{topography}} = \max\!\left(   e_{\text{degree}},   e_{\text{clustering}},   e_{\text{betweenness}} \right). $$
+Then, we can aggregate across properties. The topographical energy is the maximum error across the three properties: $$ E_{\text{topography}} = \max \left(   e_{\text{degree}},   e_{\text{clustering}},   e_{\text{betweenness}} \right). $$
 
 $E_{\text{topography}} = 0$ means all smoothed property maps are perfectly aligned across the empirical and synthetic networks; larger values indicate that at least one property is expressed in different anatomical territories.
 
-------------------------------------------------------------------------
 
-### Combined Energy {#combining-energies}
+### Combined Energy 
 
 In many applications we want models that simultaneously reproduce *distributions* (**topology**) and *spatial layouts* (**topography**). Because $E_{\text{binary}}$, $E_{\text{weighted}}$, and $E_{\text{topography}}$ are all bounded in $[0,1]$, they can be mixed using a convex combination with user-specified weight $\beta$:
 
@@ -84,13 +90,13 @@ In many applications we want models that simultaneously reproduce *distributions
 
 **Weighted case** (if you are comparing weighted networks): $$ E_{\text{total}} = \beta\,E_{\text{weighted}} + (1-\beta)\,E_{\text{topography}}. $$
 
-$\beta$. $\beta = 0.5$ gives equal weight to topological and topographical fit. Increasing $\beta$ emphasises matching the *distributions* of graph statistics; decreasing $\beta$ emphasises placing those statistics in the correct *anatomical locations*. You may fix $\beta$ a priori (common in grid searches) or treat it as an additional hyperparameter.
+$\beta = 0.5$ gives equal weight to topological and topographical fit. Increasing $\beta$ emphasises matching the *distributions* of graph statistics; decreasing $\beta$ emphasises placing those statistics in the correct *anatomical locations*. You may fix $\beta$ a priori (common in grid searches) or treat it as an additional hyperparameter.
 
 ## Parameter Sweeps
 
 Now that we have specified a method for specifying the level of agreement between empirical and model-generated networks, we can describe how to find the parameter set which reliably produces networks that have the best fit. This is done by searching over the parameter space to find configurations that have the best average fit between the empirical network and the model-generated networks. This search encompasses not only continuous parameters like [$\eta$](glossary.md#eta-eta) and [$\gamma$](glossary.md#gamma-gamma), but also discrete choices such as which [generative rule](glossary.md#generative-rule) to use for computing the [affinity matrix](glossary.md#affinity-matrix-k) or which [loss](glossary.md#loss) function to optimise for weighted GNMs.
 
-The stochastic nature of GNMs introduces additional complexity into parameter fitting. The same parameter configuration will in general produce different [networks](glossary.md#network) across multiple simulation runs due to the probabilistic sampling of connections. To account for this variability, it is necessary to generate many [networks](glossary.md#network) from each parameter set and aggregate the fit measures across these simulations. Common aggregation methods include computing the mean energy across simulations, which provides a stable estimate of expected performance, and quantile aggregation, which can focus on typical or best-case performance. The median represents a special case of quantile aggregation at the 50th percentile, offering robustness to outlier simulations with unusually poor fit or unusually good fit.
+The stochastic nature of GNMs introduces additional complexity into parameter fitting. The same parameter configuration will typically produce different [networks](glossary.md#network) across multiple simulation runs due to the probabilistic sampling of connections. To account for this variability, it is necessary to generate many [networks](glossary.md#network) from each parameter set and aggregate the fit measures across these simulations. Common aggregation methods include computing the mean energy across simulations, which provides a stable estimate of expected performance, and quantile aggregation, which can focus on typical or best-case performance. The median represents a special case of quantile aggregation at the 50th percentile, offering robustness to outlier simulations with unusually poor fit or unusually good fit.
 
 Grid searches involve systematically sweeping over the parameter space by evaluating the model at regularly spaced parameter combinations. The coarseness or fineness of the grid determines the resolution of the search, with finer grids providing more thorough exploration at the cost of increased computational requirements. Grid searches are particularly suitable when the parameter space is low-dimensional and computational resources allow for exhaustive evaluation.
 
@@ -111,7 +117,7 @@ Grid searches involve systematically sweeping over the parameter space by evalua
             <li>Compute energy between synthetic and empirical network.</li>
           </ul>
         </li>
-        <li>Aggregate energy across all simulations in the batch (using, *e.g.*, the mean or median energy for the batch).</li>
+        <li>Aggregate energy across all simulations in the batch (using, e.g., the mean or median energy for the batch).</li>
         <li>Store aggregated energy for current parameter combination,</li>
       </ol>
       <p><strong>End for</strong></p>

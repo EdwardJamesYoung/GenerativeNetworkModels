@@ -5,6 +5,10 @@ __pycache__/
 
 # The code archive
 archive/
+incremental_gnm/
+src/gnm/visualisation
+data/
+docs/examples/visuals.ipynb
 
 # Various folders that should not be tracked
 site/
