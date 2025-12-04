@@ -324,6 +324,13 @@ def perform_sweep(
         - [`fitting.optimise_evaluation`][gnm.fitting.optimise_evaluation]: Function for finding optimal parameters
     """
 
+    if torch.cuda.is_available() and device is None:
+        device = torch.device("cuda")
+    elif device is None:
+        device = torch.device("cpu")
+
+    print(f"Using device: {device} for GNM simulations")
+
     def perform_grid_sweep():
         run_results = []
         run_times = []
@@ -413,7 +420,6 @@ def perform_sweep(
 
         return run_time
 
-    print(f"Using device: {device} for GNM simulations")
     if wandb_logging:
         # for experiment logging if wandb is used - ignore if not
         exp = ExperimentEvaluation(save=False)
