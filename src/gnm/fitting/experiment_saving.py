@@ -146,10 +146,13 @@ class ExperimentEvaluation():
         binary_evals = binary_evaluations[experiment_key]
         per_connectome_binary_evals = {i: np.round(binary_evals[i].cpu().numpy(), 4).tolist() for i in range(binary_evals.shape[0])}
 
+        n_participants = binary_evals.shape[0]
+
         # may ignore weighted parameters if set to None
         all_config = asdict(experiment_dataclass.run_config.binary_parameters)
 
         all_config.update({
+            'n_participants': n_participants,
             'mean_of_max_ks_per_connectome': binary_evals.mean(axis=1).cpu().numpy().tolist(),
             'std_of_max_ks_per_connectome': binary_evals.std(axis=1).cpu().numpy().tolist(),
             'per_connectome_binary_evals': per_connectome_binary_evals
@@ -284,11 +287,8 @@ class ExperimentEvaluation():
                 return
 
         del self.index_file['experiment_configs'][experiment_name]
-        tmp_path = os.path.join(self.path, experiment_name)
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
 
-        print(f'File {tmp_path} deleted and removed from index.')
+        print(f'Experiment {experiment_name} deleted from index file.')
 
     def purge_index_file(self):
         pass
@@ -383,9 +383,18 @@ class ExperimentEvaluation():
 
         return experiments_opened
     
+    def list_experiment_parameters(self):
+        config = self.index_file['experiment_configs']
+        self.variables_to_save = list(config.values())[0].keys()
+        print("Experiment Parameters:")
+        for var in self.variables_to_save:
+            print(f'   - {var}')
+        return self.variables_to_save
+    
     def get_dataframe_of_results(
         self,
-        parameters: list[str] = ['eta', 'gamma', 'lambda', 'alpha']
+        parameters: list[str] = ['eta', 'gamma', 'mean_of_max_ks_per_connectome'],
+        save_dataframe: bool = True
         ) -> pd.DataFrame:
         
         warn("Assumes default Max KS Distance metric was used during evaluation.")
@@ -394,36 +403,51 @@ class ExperimentEvaluation():
         self._refresh_index_file()
         
         all_experiments: dict = self.index_file['experiment_configs']
+        last_experiment_name = list(all_experiments.keys())[-1]
+        last_experiment_data = all_experiments[last_experiment_name]
+
+        for param in parameters:
+            if not param in last_experiment_data.keys():
+                warn(f'Parameter {param} not found in experiment binary parameters, skipping...')
+                parameters.remove(param)
+                continue
+
+        # get n participants
+        n_participants = last_experiment_data['n_participants']
 
         # set up empty df
-        results_summary_df = {'connectome_index': [], 'mean_of_max_ks': [], 'std_of_max_ks': []}
+        results_summary_df = {'connectome_index': []}
         for param in parameters:
             results_summary_df[param] = []
+
+        base_dict = {param: [] for param in parameters}
+        base_dict['connectome_index'] = []
+
+        participant_indices = list(range(n_participants))
         
         # iterate through experiment json data
         for experiment_name in all_experiments.keys():
             experiment = all_experiments[experiment_name]
 
-            binary_results_mean = experiment['mean_of_max_ks']
-            binary_results_std = experiment['std_of_max_ks']
-
-            empty_param_values = {param: None for param in parameters}
-
             for param in parameters:
-                if not param in experiment.keys():
-                    warn(f'Parameter {param} not found in experiment binary parameters, skipping...')
-                    parameters.remove(param)
-                    results_summary_df.pop(param, None)
-                    continue
-                param_value = experiment[param].item()
-                empty_param_values[param] = param_value
+                param_values = experiment[param]
 
-            for connectome_index in range(results.shape[1]):
-                results_summary_df['eta'].append(empty_param_values['eta'])
-                results_summary_df['gamma'].append(empty_param_values['gamma'])
-                results_summary_df['connectome_index'].append(connectome_index)
-                results_summary_df['mean_of_max_ks'].append(mean_per_connectome[connectome_index])
-                results_summary_df['std_of_max_ks'].append(sd_per_connectome[connectome_index])
+                if not isinstance(param_values, list):
+                    param_values = [param_values] * n_participants
+
+                if len(param_values) != n_participants:
+                    warn(f'Parameter {param} in experiment {experiment_name} has length {len(param_values)} but expected {n_participants}, skipping...')
+                    continue
+
+                base_dict[param].extend(param_values)
+            base_dict['connectome_index'].extend(participant_indices)
+            
+            # append to main dict
+            for key in base_dict.keys():
+                results_summary_df[key].extend(base_dict[key])
+
+        for key in results_summary_df.keys():
+            print(f'Total entries for {key}: {len(results_summary_df[key])}')
 
         results_summary_df = pd.DataFrame(results_summary_df)
 
@@ -433,8 +457,19 @@ class ExperimentEvaluation():
         
         n_unique_connectomes = len(set(results_summary_df['connectome_index']))
         first_connectome_index = results_summary_df['connectome_index'][0]
-        iterations_per_connectome = results_summary_df[results_summary_df['connectome_index'] == first_connectome_index].shape[0]
+        
+        print(f"Compiled results for {n_unique_connectomes} unique connectomes.")
 
-        print(f"Compiled results for {n_unique_connectomes} unique connectomes, each with {iterations_per_connectome} iterations.")
+        if save_dataframe:
+            csv_path = os.path.join(self.path, 'experiment_results_summary.csv')
+            if os.path.exists(csv_path):
+                if self._ask_loop(f'File {csv_path} already exists. Overwrite?'):
+                    results_summary_df.to_csv(csv_path, index=False)
+                    print(f'Saved results summary dataframe to {csv_path}')
+                else:
+                    new_name = input('In that case, enter new file name: ')
+                    new_csv_path = os.path.join(self.path, new_name + '.csv')
+                    results_summary_df.to_csv(new_csv_path, index=False)
+                    print(f'Saved results summary dataframe to {new_csv_path}')
 
         return results_summary_df
