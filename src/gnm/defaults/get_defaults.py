@@ -21,12 +21,15 @@ Functions:
 """
 
 import torch
+import json
 import os
+import pickle
 from jaxtyping import Float, jaxtyped
 from typing import Optional
 from typeguard import typechecked
 
 from gnm.utils import binary_checks, weighted_checks
+from gnm.fitting.experiment_dataclasses import Experiment
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -82,6 +85,10 @@ def display_available_defaults():
     print("=== Weighted networks ===")
     weighted_consensus_networks_path = os.path.join(BASE_PATH, "weighted_networks")
     for file in os.listdir(weighted_consensus_networks_path):
+        print(file.split(".")[0])
+    print("=== Experiment examples ===")
+    experiment_examples_path = os.path.join(BASE_PATH, "experiment_dataclass_examples")
+    for file in os.listdir(experiment_examples_path):
         print(file.split(".")[0])
 
 
@@ -326,3 +333,28 @@ def get_smoothing_matrix(
     smoothing_matrix = smoothing_matrix / smoothing_matrix.sum(axis=1, keepdims=True)
 
     return smoothing_matrix
+
+
+def get_experiment_index_file() -> dict[str]:
+    r"""Load the default experiment index file.
+
+    This function loads the default experiment index file, which contains metadata
+    about pre-defined experiment configurations for generative network models.
+
+    Returns:
+        A dictionary representing the contents of the experiment index file.
+    
+    Examples:
+        >>> from gnm.defaults import get_experiment_index_file
+        >>> index_file = get_experiment_index_file()
+        >>> index_file.keys()
+    """
+
+    PATH = os.path.join(
+        BASE_PATH, "experiment_dataclass_examples", "gnm_index.json"
+    )
+
+    with open(PATH, "r") as f:
+        index_file = json.load(f)
+
+    return index_file
