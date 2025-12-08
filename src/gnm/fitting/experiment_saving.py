@@ -11,6 +11,9 @@ from .experiment_dataclasses import (
 )
 import os
 import torch
+from collections import defaultdict
+import pandas as pd
+import numpy as np
 
 """
 This module provides functionality for managing and saving experiment data for generative network models. 
@@ -126,50 +129,54 @@ class ExperimentEvaluation():
         for experiment in experiments:
             self._save_experiment(experiment)
 
+    """
+    Extracts information from experiment dataclass and saves in json index file for later parsing
+    """
     def _save_experiment(self, experiment_dataclass:Experiment, experiment_name='gnm_experiment'):
-
-        def strip_string_to_int(string_value):
-            final_number = ''
-            started = False
-            for character in string_value:
-                if character in '1234567890':
-                    final_number += character
-                    started = True
-                elif started:
-                    break
-
-            return int(final_number)
-
-        all_experiments = os.listdir(self.path)
-        with_name = [i for i in all_experiments if experiment_name in i]
-
-        if len(with_name) > 0:
-            sorted(with_name)
-            last_experiment_name = with_name[-1]
-            last_experiment_num = last_experiment_name.split('_')[-1]
-            last_experiment_num = strip_string_to_int(last_experiment_num)
-            experiment_name += f'_{uuid.uuid4().hex}'
-        else:
-            experiment_name += '_1'
+        if not self.save:
+            warn('Parameter Save is False - not saving experiment to disk or index file')
+            return
         
-        if self.save:
-            # write to pickle file
-            experiment_name = experiment_name + '.pkl'
-            experiment_path = os.path.join(self.path, experiment_name)
 
-            with open(experiment_path, 'wb') as pkl_file:
-                pickle.dump(experiment_dataclass, pkl_file)
+        binary_evaluations = experiment_dataclass.evaluation_results.binary_evaluations
+        experiment_key = list(binary_evaluations.keys())[0]
+        if len(binary_evaluations) > 1:
+            warn('Multiple binary evaluations found - only the first will be saved in the index file.')
+        
+        binary_evals = binary_evaluations[experiment_key]
+        per_connectome_binary_evals = {i: np.round(binary_evals[i].cpu().numpy(), 4).tolist() for i in range(binary_evals.shape[0])}
 
         # may ignore weighted parameters if set to None
         all_config = asdict(experiment_dataclass.run_config.binary_parameters)
+
+        all_config.update({
+            'mean_of_max_ks_per_connectome': binary_evals.mean(axis=1).cpu().numpy().tolist(),
+            'std_of_max_ks_per_connectome': binary_evals.std(axis=1).cpu().numpy().tolist(),
+            'per_connectome_binary_evals': per_connectome_binary_evals
+        })
+        
         if experiment_dataclass.run_config.weighted_parameters is not None:
             all_config.update(asdict(experiment_dataclass.run_config.weighted_parameters))
+
+            weighted_evals = experiment_dataclass.evaluation_results.weighted_evaluations
+            weighted_experiment_key = list(weighted_evals.keys())[0]
+            weighted_evals = weighted_evals[weighted_experiment_key]
+            if len(weighted_evals) > 1:
+                warn('Multiple weighted evaluations found - only the first will be saved in the index file.')
+            per_connectome_weighted_evals = {i: weighted_evals[i].cpu().numpy().tolist() for i in range(weighted_evals.shape[0])}
+            all_config.update({
+                'mean_of_weighted_ks_per_connectome': weighted_evals.mean(axis=1).cpu().numpy().tolist(),
+                'std_of_weighted_ks_per_connectome': weighted_evals.std(axis=1).cpu().numpy().tolist(),
+                'per_connectome_weighted_evals': per_connectome_weighted_evals
+            })
     
         # de-tensor floating and int values
         formatted_config = {}
         for key, value in all_config.items():
             if isinstance(value, torch.Tensor):
                 formatted_config[key] = value.item()
+            elif isinstance(value, dict):
+                formatted_config[key] = value
             elif not isinstance(value, (str, int, float, list)) and hasattr(value, "__class__"):
                 try:
                     class_name = value.__class__.__name__
@@ -177,7 +184,7 @@ class ExperimentEvaluation():
                 except:
                     warn(f'Attribute {value} could not be saved - no name or class instance found.')
             elif isinstance(value, list):
-                formatted_config[key] = repr(value)
+                formatted_config[key] = value
             elif isinstance(value, (int, float, str)):
                 formatted_config[key] = value
 
@@ -307,7 +314,13 @@ class ExperimentEvaluation():
     Queries the index file for experiments matching a specified variable and value.
     Returns a list of experiment data files that match the criteria.
     """
-    def query_experiments(self, value=None, by=None, limit=float('inf'), verbose=True):
+    def query_experiments(
+            self, 
+            value=None, 
+            by=None, 
+            limit=float('inf'), 
+            verbose=True
+            ) -> list[Experiment]:
         if not self.save:
             warn('Parameter Save is False - no index file present so returning null')
             return
@@ -317,7 +330,7 @@ class ExperimentEvaluation():
         if len(all_experiments) == 0:
             warn(f'No experiments saved in index file {self.index_file}')
 
-        first_experiment = list(all_experiments.keys())[0]
+        first_experiment = list(all_experiments.keys())[-1]
         first_experiment_data = all_experiments[first_experiment]
         searchable_variables = list(first_experiment_data.keys())
 
@@ -352,27 +365,76 @@ class ExperimentEvaluation():
     Opens experiments by their names and returns their data.
     If the name is 'test_config', it is skipped.
     """
-    def open_experiments_by_name(self, experiment_names):
-        if not self.save:
-            warn('Parameter Save is False - no index file present so returning null')
-            return
+    def find_experiment_by_name(self, experiment_names:list[str]):
             
         if isinstance(experiment_names, str):
             experiment_names = [experiment_names]
 
+        tmp_index = self.index_file['experiment_configs']
+
         experiments_opened = []
         for name in experiment_names:
-            if name == 'test_config':
-                continue
+            if name == 'test_config': continue
 
-            file_path = os.path.join(self.path, name)
-            if os.path.exists(file_path):
-                with open(file_path, 'r') as f:
-                    experiments_opened.append(f)
+            if name in tmp_index:
+                experiments_opened.append(tmp_index[name])
             else:
-                warn(f'File {name} could not be found in {file_path}. Do you have the right root folder specified?')
-        
-        # if len(experiments_opened) == 1:
-        #     experiments_opened = experiments_opened[0]
-        
+                warn(f'Experiment {name} not found in index file.')
+
         return experiments_opened
+    
+    def get_dataframe_of_results(
+        self,
+        parameters: list[str] = ['eta', 'gamma', 'lambda', 'alpha']
+        ) -> pd.DataFrame:
+        
+        warn("Assumes default Max KS Distance metric was used during evaluation.")
+
+        # reload index file to get latest experiments
+        self._refresh_index_file()
+        
+        all_experiments: dict = self.index_file['experiment_configs']
+
+        # set up empty df
+        results_summary_df = {'connectome_index': [], 'mean_of_max_ks': [], 'std_of_max_ks': []}
+        for param in parameters:
+            results_summary_df[param] = []
+        
+        # iterate through experiment json data
+        for experiment_name in all_experiments.keys():
+            experiment = all_experiments[experiment_name]
+
+            binary_results_mean = experiment['mean_of_max_ks']
+            binary_results_std = experiment['std_of_max_ks']
+
+            empty_param_values = {param: None for param in parameters}
+
+            for param in parameters:
+                if not param in experiment.keys():
+                    warn(f'Parameter {param} not found in experiment binary parameters, skipping...')
+                    parameters.remove(param)
+                    results_summary_df.pop(param, None)
+                    continue
+                param_value = experiment[param].item()
+                empty_param_values[param] = param_value
+
+            for connectome_index in range(results.shape[1]):
+                results_summary_df['eta'].append(empty_param_values['eta'])
+                results_summary_df['gamma'].append(empty_param_values['gamma'])
+                results_summary_df['connectome_index'].append(connectome_index)
+                results_summary_df['mean_of_max_ks'].append(mean_per_connectome[connectome_index])
+                results_summary_df['std_of_max_ks'].append(sd_per_connectome[connectome_index])
+
+        results_summary_df = pd.DataFrame(results_summary_df)
+
+        if len(results_summary_df['connectome_index']) == 0:
+            warn("No results found to compile into DataFrame.")
+            return pd.DataFrame()
+        
+        n_unique_connectomes = len(set(results_summary_df['connectome_index']))
+        first_connectome_index = results_summary_df['connectome_index'][0]
+        iterations_per_connectome = results_summary_df[results_summary_df['connectome_index'] == first_connectome_index].shape[0]
+
+        print(f"Compiled results for {n_unique_connectomes} unique connectomes, each with {iterations_per_connectome} iterations.")
+
+        return results_summary_df
