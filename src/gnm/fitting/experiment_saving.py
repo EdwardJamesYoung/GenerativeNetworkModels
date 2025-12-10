@@ -108,9 +108,6 @@ class ExperimentEvaluation():
         json_initial_data = {
             'date':date_formatted,
             'experiment_configs':{
-                'test_config':{
-                    i:'TEST' for i in self.variables_to_save
-                }
             }
         }
 
