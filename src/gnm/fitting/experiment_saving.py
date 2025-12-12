@@ -133,7 +133,6 @@ class ExperimentEvaluation():
         if not self.save:
             warn('Parameter Save is False - not saving experiment to disk or index file')
             return
-        
 
         binary_evaluations = experiment_dataclass.evaluation_results.binary_evaluations
         experiment_key = list(binary_evaluations.keys())[0]
@@ -193,10 +192,15 @@ class ExperimentEvaluation():
             return formatted_config
 
         self.index_file['experiment_configs'][experiment_name] = formatted_config
-        
-        # overwrite previous file
+
+        # add to json index file
+        with open(os.path.join(self.path, "gnm_index.json"), "r") as f:
+            data = json.load(f)
+
+        data['experiment_configs'][experiment_name] = formatted_config
+
         with open(os.path.join(self.path, "gnm_index.json"), "w") as f:
-            json.dump(self.index_file, f, indent=4)
+            json.dump(data, f, indent=4)
 
         self._refresh_index_file()
         
