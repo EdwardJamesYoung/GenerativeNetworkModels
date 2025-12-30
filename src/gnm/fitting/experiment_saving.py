@@ -191,13 +191,15 @@ class ExperimentEvaluation():
         if not self.save:
             return formatted_config
 
-        self.index_file['experiment_configs'][experiment_name] = formatted_config
-
         # add to json index file
         with open(os.path.join(self.path, "gnm_index.json"), "r") as f:
             data = json.load(f)
 
-        data['experiment_configs'][experiment_name] = formatted_config
+        def random_string(length=6):
+            letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+            return ''.join(np.random.choice(list(letters), size=length))
+
+        data['experiment_configs'][experiment_name + '_' + random_string()] = (formatted_config)
 
         with open(os.path.join(self.path, "gnm_index.json"), "w") as f:
             json.dump(data, f, indent=4)
