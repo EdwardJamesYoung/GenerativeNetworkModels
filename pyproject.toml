@@ -36,6 +36,7 @@ dependencies = [
     "wheel==0.44.0",
     "zipp==3.21.0",
     "wandb==0.15.12",
+    "numpy==2.1.2",
 ]
 
 keywords = [
