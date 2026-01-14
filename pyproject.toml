@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # Basic project metadata
 name = "GenerativeNetworkModels"
-version = "0.1"
+version = "1.0"
 description = """
 This package provides computationally efficient tools for implementing Weighted
 Generative Models (WGMs) in network neuroscience. Unlike Binary Generative Models (BGMs),
