@@ -45,11 +45,6 @@ class BinarySweepParameters:
             Parameter values ($\gamma$) controlling the influence of preferential attachment.
             Higher values increase the influence of the preferential attachment factor.
 
-        lambdah (torch.Tensor):
-            Parameter values ($\lambda$) controlling the influence of heterochronicity or
-            temporal distance between nodes. Affects the probability of connections between
-            nodes with different developmental timing.
-
         distance_relationship_type (List[str]):
             Types of distance-dependent relationships to use (*e.g.*, "powerlaw", "exponential").
             Defines the functional form of distance dependence in the model.
@@ -58,10 +53,6 @@ class BinarySweepParameters:
             Types of preferential attachment relationships to use (*e.g.*, "powerlaw", "exponential").
             Defines the functional form of degree dependence in the model.
 
-        heterochronicity_relationship_type (List[str]):
-            Types of heterochronicity relationships to use (*e.g.*, "powerlaw", "exponential").
-            Defines the functional form of temporal dependence in the model.
-
         generative_rule (List[GenerativeRule]):
             Generative rules to use for network creation. These define the rule by which the
             preferential attachment factor is computed.
@@ -69,6 +60,16 @@ class BinarySweepParameters:
         num_iterations (List[int]):
             Numbers of iterations to run the generative process for each parameter set.
             Controls the number of new connections added to the network.
+
+        lambdah (torch.Tensor):
+            Parameter values ($\lambda$) controlling the influence of heterochronicity or
+            temporal distance between nodes. Affects the probability of connections between
+            nodes with different developmental timing. Defaults to [torch.Tensor([0])]. Set to 
+            torch.Tensor([0]) to omit heterochronicity from the model.
+
+        heterochronicity_relationship_type (List[str]):
+            Types of heterochronicity relationships to use (*e.g.*, "powerlaw", "exponential").
+            Defines the functional form of temporal dependence in the model. Defaults to ['powerlaw'].
 
         prob_offset (List[float]):
             Small probability offsets added to avoid numerical issues with zero probabilities.
@@ -108,12 +109,12 @@ class BinarySweepParameters:
 
     eta: Float[torch.Tensor, "eta_samples"]
     gamma: Float[torch.Tensor, "gamma_samples"]
-    lambdah: Float[torch.Tensor, "lambda_samples"]
     distance_relationship_type: List[str]
     preferential_relationship_type: List[str]
-    heterochronicity_relationship_type: List[str]
     generative_rule: List[GenerativeRule]
     num_iterations: List[int]
+    lambdah: Float[torch.Tensor, "lambda_samples"] = field(default_factory=lambda: torch.Tensor([0.0]))
+    heterochronicity_relationship_type: List[str] = field(default_factory=lambda: ["powerlaw"])
     prob_offset: List[float] = field(default_factory=lambda: [1e-6])
     binary_updates_per_iteration: List[int] = field(default_factory=lambda: [1])
 
