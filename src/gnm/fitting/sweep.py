@@ -380,9 +380,9 @@ def perform_sweep(
                 for exp in run_results
                 if exp.clamp_count is not None and exp.clamp_count > 0
             ]
-            eta_vals = sorted(set(c.eta for c in clamped_configs))
-            gamma_vals = sorted(set(c.gamma for c in clamped_configs))
-            lambdah_vals = sorted(set(c.lambdah for c in clamped_configs))
+            eta_vals = sorted(set(c.eta.item() for c in clamped_configs))
+            gamma_vals = sorted(set(c.gamma.item() for c in clamped_configs))
+            lambdah_vals = sorted(set(c.lambdah.item() for c in clamped_configs))
             print(
                 f"\nWARNING: Numerical clamping was applied {total_clamps} time(s) across "
                 f"{len(clamped_configs)} configuration(s). "
