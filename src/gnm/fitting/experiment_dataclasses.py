@@ -740,6 +740,7 @@ class Experiment:
     evaluation_results: EvaluationResults
     model: Optional[GenerativeNetworkModel] = None
     run_history: Optional[RunHistory] = None
+    clamp_count: Optional[int] = None
 
     def to_device(self, device: Union[torch.device, str]):
         r"""Move all tensors in the experiment, including the model, to a specified device.

@@ -539,6 +539,10 @@ class GenerativeNetworkModel:
             self.weight_matrix = None
             self.optimiser = None
 
+        # ---- Numerical stability tracking ----
+        self._clamp_count = 0
+        self._clamp_warned = False
+
     def vprint(self, msg):
         if self.verbose:
             print(msg)
@@ -762,6 +766,30 @@ class GenerativeNetworkModel:
             self.num_nodes, device=self.adjacency_matrix.device
         )
         unnormalised_wiring_probabilities[..., diagonal_indices, diagonal_indices] = 0.0
+
+        # Clamp inf/nan values to prevent torch.multinomial errors.
+        # inf can arise when extreme parameter values (e.g. eta, gamma ≈ ±10)
+        # produce overflow in the powerlaw computations above.
+        inf_mask = torch.isinf(unnormalised_wiring_probabilities)
+        nan_mask = torch.isnan(unnormalised_wiring_probabilities)
+        if inf_mask.any() or nan_mask.any():
+            unnormalised_wiring_probabilities = torch.nan_to_num(
+                unnormalised_wiring_probabilities, nan=0.0, posinf=1e30, neginf=0.0
+            )
+            self._clamp_count += 1
+            if not self._clamp_warned:
+                self._clamp_warned = True
+                import warnings
+
+                warnings.warn(
+                    f"Numerical overflow detected in wiring probabilities "
+                    f"(eta={self.binary_parameters.eta}, gamma={self.binary_parameters.gamma}, "
+                    f"lambdah={self.binary_parameters.lambdah}, "
+                    f"relationship_types={self.binary_parameters.distance_relationship_type}/"
+                    f"{self.binary_parameters.preferential_relationship_type}/"
+                    f"{self.binary_parameters.heterochronicity_relationship_type}). "
+                    f"Values clamped to safe range. Further occurrences will be counted silently."
+                )
 
         # Normalize the wiring probabilities for each simulation
         wiring_probability = (
