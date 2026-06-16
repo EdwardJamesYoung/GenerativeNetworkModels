@@ -181,6 +181,7 @@ def perform_run(
         model=model if save_model else None,
         run_history=run_history if save_run_history else None,
         evaluation_results=evaluation_results,
+        clamp_count=model._clamp_count,
     )
 
     experiment.to_device("cpu")
@@ -367,6 +368,29 @@ def perform_sweep(
 
             gc.collect()
             torch.cuda.empty_cache()
+
+        # Report any numerical clamping that occurred during the sweep
+        total_clamps = sum(
+            exp.clamp_count for exp in run_results if exp.clamp_count is not None
+        )
+        if total_clamps > 0:
+            # Collect the unique eta/gamma/lambdah values that triggered clamping
+            clamped_configs = [
+                exp.run_config.binary_parameters
+                for exp in run_results
+                if exp.clamp_count is not None and exp.clamp_count > 0
+            ]
+            eta_vals = sorted(set(c.eta for c in clamped_configs))
+            gamma_vals = sorted(set(c.gamma for c in clamped_configs))
+            lambdah_vals = sorted(set(c.lambdah for c in clamped_configs))
+            print(
+                f"\nWARNING: Numerical clamping was applied {total_clamps} time(s) across "
+                f"{len(clamped_configs)} configuration(s). "
+                f"This indicates the following parameter values are too extreme and "
+                f"produced inf/nan wiring probabilities: "
+                f"eta={eta_vals}, gamma={gamma_vals}, lambdah={lambdah_vals}. "
+                f"Results for these configurations are unlikely to be meaningful."
+            )
 
         return run_results, run_times
 
