@@ -7,16 +7,11 @@ build-backend = "setuptools.build_meta"
 # Basic project metadata
 name = "GenerativeNetworkModels"
 version = "1.0"
-description = """
-This package provides computationally efficient tools for implementing Weighted
-Generative Models (WGMs) in network neuroscience. Unlike Binary Generative Models (BGMs),
-WGMs capture the strength of connections between network nodes. Optimized in Python,
-these tools offer an intuitive, graph-theoretic approach to modeling connectomes,
-improving efficiency over existing implementations such as the Brain Connectivity
-Toolbox and recent WGM research code."""
+description = "Computationally efficient tools for implementing Weighted Generative Models (WGMs) in network neuroscience."
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE.txt"]
 authors = [
     {name = "Edward Young", email = "ey245@cam.ac.uk"},
     {name = "William Mills", email = "william.mills@mrc-cbu.cam.ac.uk"},
@@ -26,20 +21,16 @@ authors = [
 # Dependencies
 dependencies = [
     "jaxtyping==0.2.36",
-    "setuptools==75.1.0",
-    "six==1.16.0",
-    "sympy==1.13.3",
     "tqdm==4.66.5",
     "typeguard==2.13.3",
     "typing-extensions==4.12.2",
-    "urllib3==2.3.0",
-    "wheel==0.44.0",
-    "zipp==3.21.0",
     "wandb==0.15.12",
     "numpy==1.26.4",
     "pandas==2.3.3",
     "torch==2.8.0",
     "ipykernel>=6.31.0",
+    "networkx>=3.0",
+    "pot>=0.9.0",
 ]
 
 keywords = [
@@ -64,8 +55,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Framework :: Jupyter",
-    "License :: OSI Approved :: MIT License"  # Added based on MIT license
+    "Framework :: Jupyter"
 ]
 
 [project.urls]
