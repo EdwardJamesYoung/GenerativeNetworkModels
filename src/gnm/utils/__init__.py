@@ -28,7 +28,7 @@ from .graph_properties import (
     weighted_small_worldness,
 )
 from .checks import binary_checks, weighted_checks
-from .control import get_control, generate_random_binary_networks
+from .control import get_control, generate_random_binary_networks, set_random_seed
 from .convert_datatypes import np_to_tensor
 
 __all__ = [
@@ -48,5 +48,6 @@ __all__ = [
     "weighted_checks",
     "get_control",
     "generate_random_binary_networks",
+    "set_random_seed",
     "np_to_tensor",
 ]
