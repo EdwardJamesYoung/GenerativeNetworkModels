@@ -1,5 +1,7 @@
 r"""Control networks for network evaluation and comparison."""
 
+import random
+import warnings
 import torch
 from jaxtyping import Float, jaxtyped
 from typeguard import typechecked
@@ -8,6 +10,22 @@ import numpy as np
 import networkx as nx
 from tqdm import tqdm
 from typing import Optional
+
+
+# Track the last seed set via set_random_seed so we can warn if a
+# conflicting explicit seed is passed to any downstream function.
+_last_seed_from_set: Optional[int] = None
+
+
+def _check_seed_consistency(seed: int) -> None:
+    """If a seed was set via set_random_seed and *seed* disagrees, warn."""
+    if _last_seed_from_set is not None and seed != _last_seed_from_set:
+        warnings.warn(
+            f"Seed {seed} differs from the seed previously set via "
+            f"set_random_seed ({_last_seed_from_set}). "
+            f"This may produce unexpected non-deterministic behaviour.",
+            stacklevel=3,
+        )
 
 
 @jaxtyped(typechecker=typechecked)
@@ -46,6 +64,7 @@ def get_control(
         - For weighted networks, connection weights are preserved but redistributed
     """
     if seed is not None:
+        _check_seed_consistency(seed)
         torch.manual_seed(seed)
 
     *batch_shape, num_nodes, _ = matrices.shape
@@ -108,6 +127,7 @@ def generate_random_binary_networks(
             Adjacency matrices of shape (num_networks, num_nodes, num_nodes)
     """
     if seed is not None:
+        _check_seed_consistency(seed)
         torch.manual_seed(seed)
 
     assert 0 <= density <= 1, "Density must be between 0 and 1"
@@ -148,3 +168,33 @@ def generate_random_binary_networks(
     binary_checks(graphs)
 
     return graphs
+
+
+def set_random_seed(seed: int) -> None:
+    r"""Set the random seed for Python, NumPy, and PyTorch (CPU and CUDA).
+
+    Use this at the top of scripts or experiments to ensure deterministic
+    behaviour across random number generators.
+
+    Args:
+        seed:
+            Integer seed to set for all RNGs.
+
+    Examples:
+        >>> from gnm.utils import set_random_seed
+        >>> set_random_seed(42)
+        >>> # All subsequent random operations are now deterministic.
+
+    Note:
+        - This does **not** enable ``torch.backends.cudnn.deterministic``.
+          For full determinism, set that flag separately.
+        - In Jupyter notebooks, ``np.random.seed`` only affects the current
+          cell's global state and does not propagate across cells.
+    """
+    global _last_seed_from_set
+    _last_seed_from_set = seed
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)

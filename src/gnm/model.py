@@ -145,7 +145,7 @@ class BinaryGenerativeParameters:
                 f"Matching relationship type '{self.heterochronicity_relationship_type}' is not supported for the binary generative network model."
             )
 
-    def __dict__(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "eta": self.eta,
             "gamma": self.gamma,
@@ -235,7 +235,7 @@ class WeightedGenerativeParameters:
     maximise_criterion: bool = False
     weight_updates_per_iteration: int = 1
 
-    def __dict__(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "alpha": self.alpha,
             "optimisation_criterion": str(self.optimisation_criterion),

@@ -24,6 +24,7 @@ dist/
 
 # Should not track experiment folder - may contain files due to testing
 generative_model_experiments/
+test_experiments/
 
 jq21330-university-of-cambridge/
 

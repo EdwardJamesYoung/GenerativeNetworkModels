@@ -15,7 +15,7 @@ from warnings import warn
 from tqdm import tqdm
 
 from .checks import binary_checks, weighted_checks
-from .control import get_control
+from .control import get_control, _check_seed_consistency
 
 
 @jaxtyped(typechecker=typechecked)
@@ -766,6 +766,7 @@ def binary_small_worldness(
         >>> small_worldness = binary_small_worldness(binary_connectome)
     """
     if seed is not None:
+        _check_seed_consistency(seed)
         torch.manual_seed(seed)
 
     binary_checks(adjacency_matrices)
@@ -855,6 +856,7 @@ def weighted_small_worldness(
         torch.Size([5])
     """
     if seed is not None:
+        _check_seed_consistency(seed)
         torch.manual_seed(seed)
 
     weighted_checks(weight_matrices)

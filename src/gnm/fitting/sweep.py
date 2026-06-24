@@ -619,7 +619,8 @@ def perform_evaluations(
         if isinstance(device, str):
             device = torch.device(device)
 
-        real_binary_matrices = real_binary_matrices.to(device)
+        if real_binary_matrices is not None:
+            real_binary_matrices = real_binary_matrices.to(device)
 
         if real_weighted_matrices is not None:
             real_weighted_matrices = real_weighted_matrices.to(device)
