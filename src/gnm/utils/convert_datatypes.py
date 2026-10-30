@@ -1,26 +1,35 @@
-import torch
 import numpy as np
+import torch
 
 
-def np_to_tensor(np_adj_matrix: np.array, device=None) -> torch.Tensor:
-    """
-    Converts a NumPy adjacency matrix to a PyTorch tensor with batch dimensionality if it didn't exist before.
+def np_to_tensor(np_adj_matrix, device=None) -> torch.Tensor:
+    """Convert an array-like adjacency matrix to a float32 PyTorch tensor.
+
+    NumPy arrays, numeric Python sequences, and PyTorch tensors are accepted.
+    A single ``[node, node]`` matrix gains a batch dimension; an existing
+    ``[batch, node, node]`` array keeps its shape.
 
     Args:
-        np_adj_matrix (np.array): The input NumPy adjacency matrix. Can be either 2D or 3D.
-        device (torch.device, optional): The device on which to create the tensor. Defaults to 'cuda:0' if available, otherwise 'cpu'.
+        np_adj_matrix: A 2D or 3D array-like adjacency matrix.
+        device: Destination device (e.g. ``"cpu"``, ``"mps"``, or ``"cuda:0"``).
+            Defaults to CUDA if available, otherwise CPU.
 
     Returns:
-        torch.Tensor: The converted Pydef np_to_tensor(np_adj_matrix: np.array, device=None) -> torch.Tensor:
+        A float32 tensor with shape ``[batch, node, node]`` on ``device``.
     """
-
     if device is None:
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    
-    is_batched = len(np_adj_matrix.shape) == 3
-    
-    if is_batched:
-        np_adj_matrix = np.expand_dims(np_adj_matrix, 0)
-    
-    torch_adj_matrix = torch.Tensor(np_adj_matrix, device=device)
-    return torch_adj_matrix
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    if isinstance(np_adj_matrix, torch.Tensor):
+        tensor = np_adj_matrix
+    else:
+        # NumPy handles sequences and other array-like objects, including
+        # arrays with negative strides that PyTorch cannot consume directly.
+        array = np.ascontiguousarray(np_adj_matrix, dtype=np.float32)
+        tensor = torch.from_numpy(array)
+
+    if tensor.ndim not in (2, 3):
+        raise ValueError("Expected a 2D or 3D adjacency matrix")
+
+    tensor = tensor.to(device=device, dtype=torch.float32)
+    return tensor.unsqueeze(0) if tensor.ndim == 2 else tensor
