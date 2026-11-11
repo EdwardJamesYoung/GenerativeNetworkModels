@@ -9,21 +9,10 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
-  jobs:
-    build:
-      html:
-        - >-
-          python -u -m mkdocs build --verbose --clean
-          --site-dir $READTHEDOCS_OUTPUT/html
-          --config-file mkdocs.yml
-
-# Build documentation in the "docs/" directory with mkdocs
-mkdocs:
-  configuration: mkdocs.yml
-
-# Optionally, but recommended,
-# declare the Python requirements required to build your documentation
-# See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-python:
-  install:
-    - requirements: docs/requirements.txt
+  commands:
+    - python -m pip install --upgrade pip setuptools
+    - python -m pip install -r docs/requirements.txt
+    - >-
+      python -u -m mkdocs build --verbose --clean
+      --site-dir $READTHEDOCS_OUTPUT/html
+      --config-file mkdocs.yml
