@@ -100,7 +100,7 @@ def binary_clustering_coefficients(
     See Also:
         - [`utils.weighted_clustering_coefficients`][gnm.utils.weighted_clustering_coefficients]: For calculating clustering coefficient in weighted networks.
         - [`evaluation.ClusteringKS`][gnm.evaluation.ClusteringKS]: Binary evaluation criterion which compares the distribution of clustering coefficients between two binary networks.
-        - [`evaluation.ClusteringCorrelation`][gnm.evaluation.ClusteringCorrelation]: Binary evaluation criterion which compares the correlations between the clustering coefficients between two binary networks.
+        - [`evaluation.BinaryClusteringCorrelation`][gnm.evaluation.BinaryClusteringCorrelation]: Binary evaluation criterion which compares the correlations between the clustering coefficients between two binary networks.
     """
     binary_checks(adjacency_matrix)
 
@@ -730,7 +730,7 @@ def binary_small_worldness(
     adjacency_matrices: Float[torch.Tensor, "*batch num_nodes num_nodes"],
     num_random_networks: int = 100,
     seed: Optional[int] = None,
-):
+) -> Float[torch.Tensor, "*batch"]:
     r"""Compute the (binary) small-worldness for each network in a batch.
 
     Small-worldness quantifies the degree to which a network exhibits small-world properties,
@@ -815,7 +815,7 @@ def weighted_small_worldness(
     num_random_networks: int = 100,
     invert_weights: bool = False,
     seed: Optional[int] = None,
-):
+) -> Float[torch.Tensor, "*batch"]:
     r"""Compute the (weighted) small-worldness for each network in a batch.
 
     Small-worldness quantifies the degree to which a network exhibits small-world properties,

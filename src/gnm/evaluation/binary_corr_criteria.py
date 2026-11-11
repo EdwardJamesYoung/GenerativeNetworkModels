@@ -85,7 +85,7 @@ class BinaryClusteringCorrelation(CorrelationCriterion, BinaryEvaluationCriterio
     Examples:
         >>> import torch
         >>> from gnm.defaults import get_binary_network, get_distance_matrix
-        >>> from gnm.evaluation import ClusteringCorrelation
+        >>> from gnm.evaluation import BinaryClusteringCorrelation
         >>> from gnm.utils import get_control
         >>> # Load a default binary network
         >>> real_network = get_binary_network()
@@ -95,7 +95,7 @@ class BinaryClusteringCorrelation(CorrelationCriterion, BinaryEvaluationCriterio
         >>> # Create a random network
         >>> random_network = get_control(real_network)
         >>> # Calculate clustering coefficient spatial correlation
-        >>> criterion = ClusteringCorrelation(smoothing_matrix)
+        >>> criterion = BinaryClusteringCorrelation(smoothing_matrix)
         >>> dissimilarity = criterion(random_network, real_network)
 
     See Also:
@@ -145,7 +145,7 @@ class BinaryBetweennessCorrelation(CorrelationCriterion, BinaryEvaluationCriteri
     Examples:
         >>> import torch
         >>> from gnm.defaults import get_binary_network, get_distance_matrix
-        >>> from gnm.evaluation import BetweennessCorrelation
+        >>> from gnm.evaluation import BinaryBetweennessCorrelation
         >>> from gnm.utils import get_control
         >>> # Load a default binary network
         >>> real_network = get_binary_network()
@@ -155,7 +155,7 @@ class BinaryBetweennessCorrelation(CorrelationCriterion, BinaryEvaluationCriteri
         >>> # Create a random network
         >>> random_network = get_control(real_network)
         >>> # Calculate betweenness centrality spatial correlation
-        >>> criterion = BetweennessCorrelation(smoothing_matrix)
+        >>> criterion = BinaryBetweennessCorrelation(smoothing_matrix)
         >>> dissimilarity = criterion(random_network, real_network)
 
     See Also:
