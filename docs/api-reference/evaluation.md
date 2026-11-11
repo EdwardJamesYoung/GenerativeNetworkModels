@@ -102,12 +102,12 @@
         members: 
             - __init__
     
-::: gnm.evaluation.ClusteringCorrelation
+::: gnm.evaluation.BinaryClusteringCorrelation
     options:
         members: 
             - __init__
     
-::: gnm.evaluation.BetweennessCorrelation
+::: gnm.evaluation.BinaryBetweennessCorrelation
     options:
         members:
-            - __init__ 
+            - __init__

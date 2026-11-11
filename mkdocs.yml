@@ -51,12 +51,15 @@ nav:
     - Fitting Generative Network Models: understanding-gnms/fitting-gnms.md
   - Example scripts:
     - Overview: examples/index.md
-    - Parameter sweep: examples/sweep_example.ipynb 
-    - Weighted Sweep: examples/weighted_sweep.ipynb
+    - Parameter sweep: examples/sweep_example.ipynb
+    - Sparse and coarse sweep: examples/sparse_and_coarse_sweep_example.ipynb
+    - Heterochronicity sweep: examples/heterochronicity_example.ipynb
+    - Weighted sweep: examples/weighted_sweep.ipynb
     - Weighted increments: examples/weighted_increments.ipynb
-    - Graphing model performance over time: examples/graph_model_performance.ipynb
-    - Wandb integration: examples/example_wandb_run.ipynb
-    - Saving Experiments: examples/experiment_saving_example.ipynb
+    - Save and query experiments: examples/experiment_saving_example.ipynb
+    - Weights & Biases logging: examples/example_wandb_run.ipynb
+    - Graph metrics: examples/get_graph_metrics_example.ipynb
+    - Performance plots: examples/graph_model_performance.ipynb
   - API Reference: 
     - Overview: api-reference/index.md
     - model: api-reference/model.md

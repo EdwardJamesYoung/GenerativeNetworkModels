@@ -283,8 +283,8 @@ class CorrelationCriterion(EvaluationCriterion, ABC):
 
     See Also:
         - [`evaluation.DegreeCorrelation`][gnm.evaluation.DegreeCorrelation]: Correlation of node degree patterns
-        - [`evaluation.ClusteringCorrelation`][gnm.evaluation.ClusteringCorrelation]: Correlation of clustering coefficient patterns
-        - [`evaluation.BetweennessCorrelation`][gnm.evaluation.BetweennessCorrelation]: Correlation of betweenness centrality patterns
+        - [`evaluation.BinaryClusteringCorrelation`][gnm.evaluation.BinaryClusteringCorrelation]: Correlation of binary clustering coefficient patterns
+        - [`evaluation.BinaryBetweennessCorrelation`][gnm.evaluation.BinaryBetweennessCorrelation]: Correlation of binary betweenness centrality patterns
     """
 
     def __init__(self, smoothing_matrix: Float[torch.Tensor, "num_nodes num_nodes"]):
