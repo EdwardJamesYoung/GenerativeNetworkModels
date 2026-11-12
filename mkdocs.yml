@@ -24,7 +24,11 @@ plugins:
             heading_level: 2
             docstring_style: google  
             merge_init_into_class: true
-  - mkdocs-jupyter
+  - mkdocs-jupyter:
+      # Let MkDocs render Markdown directly. Jupytext's Markdown probing can
+      # invoke Pandoc and stall on Read the Docs, even for non-notebook pages.
+      ignore: ["*.md"]
+      execute: false
 
 markdown_extensions:
   - pymdownx.arithmatex:
