@@ -13,6 +13,6 @@ build:
     - python -m pip install --upgrade pip setuptools
     - python -m pip install -r docs/requirements.txt
     - >-
-      python -u -m mkdocs build --verbose --clean
+      timeout --kill-after=10s 180s python -u scripts/build_docs.py build --verbose --clean
       --site-dir $READTHEDOCS_OUTPUT/html
       --config-file mkdocs.yml
