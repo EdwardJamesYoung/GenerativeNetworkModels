@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # Basic project metadata
 name = "GenerativeNetworkModels"
-version = "1.0"
+version = "1.0.1"
 description = "Computationally efficient tools for implementing Weighted Generative Models (WGMs) in network neuroscience."
 readme = "README.md"
 requires-python = ">=3.9"
