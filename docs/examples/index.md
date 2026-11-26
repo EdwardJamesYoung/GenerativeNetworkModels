@@ -8,7 +8,7 @@ Most model examples use data from `gnm.defaults`.
 | Example | Use it when |
 | --- | --- |
 | [Parameter sweep](sweep_example.ipynb) | You want a complete binary and weighted fitting workflow. Start here. |
-| [Sparse and coarse sweep](sparse_and_coarse_sweep_example.ipynb) | You want to search a broad parameter range, then refine the best region. |
+| [Coarse and fine-grained sweep](coarse_and_fine_grained_sweep_example.ipynb) | You want to search a broad parameter range, then refine the best region. |
 | [Heterochronicity sweep](heterochronicity_example.ipynb) | You want to test how developmental timing changes binary network growth. |
 | [Weighted sweep](weighted_sweep.ipynb) | You want to compare weighted models across `alpha` and `omega` values. |
 | [Weighted increments](weighted_increments.ipynb) | You want to test distance regularisation during weight optimisation. |

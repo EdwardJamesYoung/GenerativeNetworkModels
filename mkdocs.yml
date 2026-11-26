@@ -56,7 +56,7 @@ nav:
   - Example scripts:
     - Overview: examples/index.md
     - Parameter sweep: examples/sweep_example.ipynb
-    - Sparse and coarse sweep: examples/sparse_and_coarse_sweep_example.ipynb
+    - Coarse and fine-grained sweep: examples/coarse_and_fine_grained_sweep_example.ipynb
     - Heterochronicity sweep: examples/heterochronicity_example.ipynb
     - Weighted sweep: examples/weighted_sweep.ipynb
     - Weighted increments: examples/weighted_increments.ipynb
