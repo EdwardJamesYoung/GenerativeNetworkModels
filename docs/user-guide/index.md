@@ -20,7 +20,7 @@ Use the [API reference](../api-reference/index.md) for class and function detail
 | Example | Use it when |
 | --- | --- |
 | [Parameter sweep](../examples/sweep_example.ipynb) | You want a complete binary and weighted fitting workflow. Start here. |
-| [Sparse and coarse sweep](../examples/sparse_and_coarse_sweep_example.ipynb) | You want to search a broad parameter range, then refine the best region. |
+| [Coarse and fine-grained sweep](../examples/coarse_and_fine_grained_sweep_example.ipynb) | You want to search a broad parameter range, then refine the best region. |
 | [Heterochronicity sweep](../examples/heterochronicity_example.ipynb) | You want to test how developmental timing changes binary network growth. |
 | [Weighted sweep](../examples/weighted_sweep.ipynb) | You want to compare weighted models across `alpha` and `omega` values. |
 | [Weighted increments](../examples/weighted_increments.ipynb) | You want to test distance regularisation during weight optimisation. |

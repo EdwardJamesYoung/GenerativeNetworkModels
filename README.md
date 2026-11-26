@@ -25,7 +25,7 @@ function details.
 | Example | Use it when |
 | --- | --- |
 | [Parameter sweep](docs/examples/sweep_example.ipynb) | You want a complete binary and weighted fitting workflow. Start here. |
-| [Sparse and coarse sweep](docs/examples/sparse_and_coarse_sweep_example.ipynb) | You want to search a broad parameter range, then refine the best region. |
+| [Coarse and fine-grained sweep](docs/examples/coarse_and_fine_grained_sweep_example.ipynb) | You want to search a broad parameter range, then refine the best region. |
 | [Heterochronicity sweep](docs/examples/heterochronicity_example.ipynb) | You want to test how developmental timing changes binary network growth. |
 | [Weighted sweep](docs/examples/weighted_sweep.ipynb) | You want to compare weighted models across `alpha` and `omega` values. |
 | [Weighted increments](docs/examples/weighted_increments.ipynb) | You want to test distance regularisation during weight optimisation. |
